@@ -46,9 +46,10 @@ npm run dev            # Starts the web app on http://localhost:5173
 
 ## 🔐 Seeded Test Accounts
 
-The following accounts are automatically generated upon database initialization for testing:
-*   **Admin:** `admin@osteoverse.com` | Password: `admin123`
-*   **Doctor:** `dr.connor@osteoverse.com` | Password: `doctor123`
+The following accounts are pre-configured in the Neon PostgreSQL database for testing:
+*   **System Admin:** `admin@osteoverse.com` | Password: `admin123`
+*   **Hiresh Admin:** `HireshAdmin@gmail.com` | Password: `AdminHiresh`
+*   **Doctor:** `doctor@osteoverse.com` | Password: `doctor123`
 
 ## 👥 Contributors
 Developed by the OsteoVerse AI Team.
