@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Activity, FileText, CheckCircle2, X, BrainCircuit, BarChart3, ShieldCheck, AlertTriangle, Loader2, ScanFace, Database, Calendar, LogOut } from 'lucide-react';
-import { api } from '../utils/api';
+import { BASE_URL } from '../utils/api';
 
 const DoctorDashboard = () => {
   const [patients, setPatients] = useState([]);
@@ -48,7 +48,7 @@ const DoctorDashboard = () => {
 
   const fetchPatients = async () => {
     try {
-      const res = await fetch('http://localhost:7860/api/v1/doctor/patients', {
+      const res = await fetch(`${BASE_URL}/api/v1/doctor/patients`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('osteocare_token')}` }
       });
       const data = await res.json();
@@ -64,7 +64,7 @@ const DoctorDashboard = () => {
 
   const handleRequest = async (req) => {
     try {
-      const res = await fetch('http://localhost:7860/api/v1/doctor/request_action', {
+      const res = await fetch(`${BASE_URL}/api/v1/doctor/request_action`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${localStorage.getItem('osteocare_token')}`,
@@ -96,7 +96,7 @@ const DoctorDashboard = () => {
     await new Promise(r => setTimeout(r, 800));
 
     try {
-      const res = await fetch('http://localhost:7860/api/v1/predict/ml-dexa', {
+      const res = await fetch(`${BASE_URL}/api/v1/predict/ml-dexa`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${localStorage.getItem('osteocare_token')}`,
@@ -130,7 +130,7 @@ const DoctorDashboard = () => {
 
   const handleAssignAppointment = async () => {
     try {
-      const res = await fetch('http://localhost:7860/api/v1/doctor/assign-appointment', {
+      const res = await fetch(`${BASE_URL}/api/v1/doctor/assign-appointment`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${localStorage.getItem('osteocare_token')}`,
@@ -372,8 +372,8 @@ const DoctorDashboard = () => {
                 Dismiss
               </button>
               {predictionResult.pdf_url && (
-                <button onClick={() => window.open(`http://localhost:7860${predictionResult.pdf_url}`, '_blank')} className="flex-1 py-3 px-4 rounded-xl font-bold bg-blue-600 text-slate-800 hover:bg-blue-500 transition-colors shadow-lg shadow-blue-900/20 flex justify-center items-center gap-2 border border-blue-400/30">
-                  <FileText size={18} /> View PDF Report
+                <button onClick={() => window.open(`${BASE_URL}${predictionResult.pdf_url}`, '_blank')} className="flex-1 py-3 px-4 rounded-xl font-bold bg-blue-600 text-slate-800 hover:bg-blue-500 transition-colors shadow-lg shadow-blue-900/20 flex justify-center items-center gap-2 border border-blue-400/30">
+                  <FileText size={20} /> Download Full Report
                 </button>
               )}
             </div>

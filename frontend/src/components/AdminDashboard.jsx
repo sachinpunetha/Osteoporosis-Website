@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, Database, Server, Users, ActivitySquare, Trash2, LogOut } from 'lucide-react';
-import { api } from '../utils/api';
+import { BASE_URL } from '../utils/api';
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -15,7 +15,7 @@ const AdminDashboard = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('http://localhost:7860/api/v1/admin/users', {
+      const res = await fetch(`${BASE_URL}/api/v1/admin/users`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('osteocare_token')}` }
       });
       const data = await res.json();
@@ -32,7 +32,7 @@ const AdminDashboard = () => {
     if(!window.confirm(`Are you sure you want to remove ${name}? This action cannot be undone.`)) return;
     
     try {
-      const res = await fetch(`http://localhost:7860/api/v1/admin/remove-user/${userId}`, {
+      const res = await fetch(`${BASE_URL}/api/v1/admin/remove-user/${userId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('osteocare_token')}` }
       });
@@ -48,7 +48,7 @@ const AdminDashboard = () => {
 
   const fetchAssignments = async () => {
     try {
-      const res = await fetch('http://localhost:7860/api/v1/admin/patient-assignments');
+      const res = await fetch(`${BASE_URL}/api/v1/admin/patient-assignments`);
       const data = await res.json();
       if(data.status === 'success') {
         setPatients(data.patients);
@@ -61,7 +61,7 @@ const AdminDashboard = () => {
 
   const handleAssign = async (patientId, doctorId) => {
     try {
-      const res = await fetch('http://localhost:7860/api/v1/admin/assign-doctor', {
+      const res = await fetch(`${BASE_URL}/api/v1/admin/assign-doctor`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ patient_id: patientId, doctor_id: doctorId })
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
               e.preventDefault();
               const formData = new FormData(e.target);
               try {
-                await fetch('http://localhost:7860/auth/register', {
+                await fetch(`${BASE_URL}/auth/register`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(Object.fromEntries(formData))

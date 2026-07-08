@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, AlertCircle, FileText, Pill, Calendar, LogOut } from 'lucide-react';
-import { api } from '../utils/api';
+import { BASE_URL } from '../utils/api';
 
 const PatientDashboard = () => {
   const user = JSON.parse(localStorage.getItem('osteocare_user')) || { name: 'Patient' };
@@ -22,7 +22,7 @@ const PatientDashboard = () => {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch('http://localhost:7860/api/v1/patient/profile', {
+      const res = await fetch(`${BASE_URL}/api/v1/patient/profile`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('osteocare_token')}` }
       });
       const data = await res.json();
@@ -37,7 +37,7 @@ const PatientDashboard = () => {
 
   const handleRequestAppointment = async () => {
     try {
-      const res = await fetch('http://localhost:7860/api/v1/patient/request-appointment', {
+      const res = await fetch(`${BASE_URL}/api/v1/patient/request-appointment`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('osteocare_token')}` }
       });
@@ -61,7 +61,7 @@ const PatientDashboard = () => {
     }
 
     try {
-      const res = await fetch('http://localhost:7860/api/v1/patient/submit-questionnaire', {
+      const res = await fetch(`${BASE_URL}/api/v1/patient/submit-questionnaire`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${localStorage.getItem('osteocare_token')}`,
@@ -313,7 +313,7 @@ const PatientDashboard = () => {
             {profile.pdf_url && (
               <div className="pt-4 animate-slide-up">
                 <a 
-                  href={`http://localhost:7860${profile.pdf_url}`} 
+                  href={`${BASE_URL}${profile.pdf_url}`} 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="w-full flex items-center justify-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 px-6 py-3 rounded-xl font-bold transition-colors"
