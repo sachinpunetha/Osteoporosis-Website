@@ -13,8 +13,9 @@ from llm_rag import ask_freellmapi
 from api_routes import api_bp
 
 app = Flask(__name__, static_folder='../frontend/dist', static_url_path='/')
-# Enable CORS for all routes so React (localhost:5173) can talk to Flask (localhost:5000)
-CORS(app)
+# Enable CORS, defaulting to all origins unless FRONTEND_URL is set in the environment
+frontend_url = os.environ.get('FRONTEND_URL', '*')
+CORS(app, resources={r"/*": {"origins": frontend_url}})
 
 # Database Configuration (Neon PostgreSQL)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://neondb_owner:npg_wD8dZUqJu4vH@ep-broad-dream-ao9mlt4w.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require'
