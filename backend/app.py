@@ -46,6 +46,11 @@ try:
 except Exception as e:
     print(f"ERROR: Error loading teammate tabular models: {e}")
 
+# --- HEALTH CHECK ROUTE ---
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy"}), 200
+
 # --- AUTHENTICATION ROUTES ---
 @app.route('/auth/register', methods=['POST'])
 def register():
