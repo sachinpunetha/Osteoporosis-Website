@@ -1,8 +1,4 @@
 import os
-import torch
-import torchvision.transforms as transforms
-import torchvision.models as models
-from PIL import Image
 from flask import Blueprint, request, jsonify
 from datetime import datetime, timedelta
 import random
@@ -15,36 +11,6 @@ from models import (
 from llm_rag import ask_freellmapi
 
 api_bp = Blueprint('api_bp', __name__)
-
-# --- DEEP LEARNING MODEL SETUP ---
-MODEL_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
-densenet_path = os.path.join(MODEL_DIR, "densenet121_best.pth")
-
-dl_model = None
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-try:
-    dl_model = models.densenet121(weights=None)
-    num_ftrs = dl_model.classifier.in_features
-    dl_model.classifier = torch.nn.Linear(num_ftrs, 3) # Normal, Osteopenia, Osteoporosis
-    
-    if os.path.exists(densenet_path):
-        state_dict = torch.load(densenet_path, map_location=device, weights_only=True)
-        dl_model.load_state_dict(state_dict)
-        dl_model.to(device)
-        dl_model.eval()
-        print("SUCCESS: PyTorch DenseNet Model Loaded")
-    else:
-        print("WARNING: densenet121_best.pth not found. DL Inference will fail.")
-except Exception as e:
-    print(f"ERROR: Failed to load PyTorch model: {e}")
-    dl_model = None
-
-img_transforms = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-])
 
 # --- 1. QUEUE & ONBOARDING (Smart Load Balancing) ---
 
