@@ -60,7 +60,21 @@ const DoctorDashboard = () => {
     }
   };
 
-  const set = (field, val) => setForm(f => ({ ...f, [field]: val }));
+  const set = (field, val) => {
+    setForm(f => {
+      const updated = { ...f, [field]: val };
+      // Auto-calculate BMI when height or weight changes
+      if (field === 'height' || field === 'weight') {
+        const h = field === 'height' ? parseFloat(val) : parseFloat(updated.height);
+        const w = field === 'weight' ? parseFloat(val) : parseFloat(updated.weight);
+        if (h > 0 && w > 0) {
+          const heightInMeters = h / 100;
+          updated.bmi = parseFloat((w / (heightInMeters * heightInMeters)).toFixed(2));
+        }
+      }
+      return updated;
+    });
+  };
 
   const handleRequest = async (req) => {
     try {
@@ -289,8 +303,16 @@ const DoctorDashboard = () => {
                 <div key={key}>
                   <label className="text-xs font-semibold text-slate-700 block mb-1 truncate" title={DEXA_LABELS[key] || key}>
                     {DEXA_LABELS[key] || key}
+                    {key === 'bmi' && <span className="text-emerald-600 ml-1">(auto)</span>}
                   </label>
-                  <input type="number" step="0.01" value={form[key]} onChange={e => set(key, parseFloat(e.target.value))} className="input-glass w-full" />
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={form[key]}
+                    onChange={e => set(key, parseFloat(e.target.value))}
+                    readOnly={key === 'bmi'}
+                    className={`input-glass w-full ${key === 'bmi' ? 'bg-emerald-50 cursor-not-allowed' : ''}`}
+                  />
                 </div>
               ))}
             </div>

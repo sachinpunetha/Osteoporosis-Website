@@ -465,6 +465,13 @@ def predict_ml_dexa():
             "as": float(data.get('as_', 0))
         }
         
+        # Auto-calculate BMI from height and weight
+        height_cm = patient_data.get('height', 0)
+        weight_kg = patient_data.get('weight', 0)
+        if height_cm > 0 and weight_kg > 0:
+            height_m = height_cm / 100.0
+            patient_data['bmi'] = round(weight_kg / (height_m * height_m), 2)
+        
         df = pd.DataFrame([patient_data])
         df = df[features_with_dexa]
         df_scaled = scaler_with_dexa.transform(df)
