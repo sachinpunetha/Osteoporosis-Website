@@ -133,38 +133,27 @@ def submit_questionnaire():
         
         # Build DataFrame for Without DEXA Model
         import pandas as pd
-        # The ML model was trained on label-encoded integers (0 and 1), 
-        # so we must map the incoming strings to match.
-        def encode(val, pos_val):
-            if isinstance(val, str):
-                return 1 if val.lower() in [v.lower() for v in pos_val] else 0
-            return int(val)
-
         patient_data = {
             "Age": int(data.get('Age', 0)),
-            "Gender": encode(data.get('Gender', 'Male'), ['Female']),
-            "Hormonal_Changes": encode(data.get('Hormonal_Changes', 'Normal'), ['Postmenopausal']),
-            "Body_Weight": encode(data.get('Body_Weight', 'Normal'), ['Underweight', 'Overweight']),
-            "Vitamin_D_Intake": encode(data.get('Vitamin_D_Intake', 'Sufficient'), ['Sufficient']),
-            "Physical_Activity": encode(data.get('Physical_Activity', 'Active'), ['Active']),
-            "Smoking": encode(data.get('Smoking', 'No'), ['Yes']),
-            "Alcohol_Consumption": 0 if data.get('Alcohol_Consumption', 'None') == 'None' else 1,
-            "Medications": 0 if data.get('Medications', 'None').lower() == 'none' else 1,
-            "Prior_Fractures": encode(data.get('Prior_Fractures', 'No'), ['Yes']),
+            "Gender": data.get('Gender', 'Unknown'),
+            "Hormonal_Changes": data.get('Hormonal_Changes', 'Normal'),
+            "Family_History": data.get('Family_History', 'No'),
+            "Race/Ethnicity": data.get('Race_Ethnicity', 'Caucasian'),
+            "Body_Weight": data.get('Body_Weight', 'Normal'),
+            "Calcium_Intake": data.get('Calcium_Intake', 'Adequate'),
+            "Vitamin_D_Intake": data.get('Vitamin_D_Intake', 'Sufficient'),
+            "Physical_Activity": data.get('Physical_Activity', 'Active'),
+            "Smoking": data.get('Smoking', 'No'),
+            "Alcohol_Consumption": data.get('Alcohol_Consumption', 'None'),
+            "Medical_Conditions": data.get('Medical_Conditions', 'None'),
+            "Medications": data.get('Medications', 'None'),
+            "Prior_Fractures": data.get('Prior_Fractures', 'No'),
         }
         df_nodexa = pd.DataFrame([patient_data])
         
-        # Ensure only the trained features are passed to the model
-        expected_features = [
-            'Age', 'Smoking', 'Physical_Activity', 'Medications', 'Vitamin_D_Intake', 
-            'Hormonal_Changes', 'Gender', 'Body_Weight', 'Prior_Fractures', 'Alcohol_Consumption'
-        ]
-        df_nodexa = df_nodexa[expected_features]
-        
         # Predict Without DEXA
         try:
-            df_nodexa_scaled = scaler_without_dexa.transform(df_nodexa)
-            pred = model_without_dexa.predict(df_nodexa_scaled)[0]
+            pred = model_without_dexa.predict(df_nodexa)[0]
             initial_prediction = "High Risk" if pred == 1 else "Low Risk"
         except Exception as e:
             print("Error predicting nodexa:", e)
