@@ -202,9 +202,20 @@ const DoctorDashboard = () => {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('osteocare_token')}` },
         body: formData
       });
-      const data = await res.json();
+      
+      let data;
+      try {
+        data = await res.json();
+      } catch(parseErr) {
+        const text = await res.text().catch(() => '');
+        toast.error(`Server error (${res.status}): ${text.substring(0, 100) || 'Non-JSON response'}`);
+        setIsProcessing(false);
+        setXrayFile(null);
+        return;
+      }
       
       if(res.ok) {
+        toast.success(`X-Ray analyzed: ${data.prediction} (${data.confidence}% confidence)`);
         fetchPatients();
         setSelectedPatient(prev => ({ ...prev, request: null, final_prediction: data.prediction }));
         setStats(null);
@@ -213,7 +224,7 @@ const DoctorDashboard = () => {
         toast.error(data.message || 'Error analyzing X-Ray');
       }
     } catch(err) {
-      toast.error("Connection error");
+      toast.error(`Connection failed: ${err.message}`);
     }
     setIsProcessing(false);
     setXrayFile(null);

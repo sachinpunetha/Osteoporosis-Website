@@ -36,6 +36,14 @@ MODELS_BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", 
 with_dexa_path = os.path.join(MODELS_BASE_DIR, "ML_MODEL(WITH DEXA)", "best_model_pipeline.joblib")
 without_dexa_path = os.path.join(MODELS_BASE_DIR, "ML_MODEL(WITHOUTDEXA)", "osteoporosis_model.pkl")
 
+model_with_dexa = None
+features_with_dexa = None
+scaler_with_dexa = None
+bounds_with_dexa = None
+training_means_with_dexa = {}
+binary_defaults_with_dexa = {}
+model_without_dexa = None
+
 try:
     saved_dexa = joblib.load(with_dexa_path)
     model_with_dexa = saved_dexa["model"]
@@ -55,14 +63,15 @@ try:
         "calcitonin": round(training_means_with_dexa.get("calcitonin", 0)),
         "as": round(training_means_with_dexa.get("as", 0)),
     }
-    
-    without_dexa_scaler_path = os.path.join(MODELS_BASE_DIR, "ML_MODEL(WITHOUTDEXA)", "osteoporosis_scaler.pkl")
-    model_without_dexa = joblib.load(without_dexa_path)
-    scaler_without_dexa = joblib.load(without_dexa_scaler_path)
-    
-    print("SUCCESS: Teammate's Tabular Models Loaded Successfully")
+    print("SUCCESS: With-DEXA Model Loaded")
 except Exception as e:
-    print(f"ERROR: Error loading teammate tabular models: {e}")
+    print(f"WARNING: With-DEXA model failed to load: {e}")
+
+try:
+    model_without_dexa = joblib.load(without_dexa_path)
+    print("SUCCESS: Without-DEXA Model Loaded")
+except Exception as e:
+    print(f"WARNING: Without-DEXA model failed to load: {e}")
 
 # --- HEALTH CHECK ROUTE ---
 @app.route('/health', methods=['GET'])
@@ -514,6 +523,8 @@ def assign_appointment():
 @jwt_required()
 def analyze_xray():
     try:
+        if model_without_dexa is None:
+            return jsonify({"status": "error", "message": "ML model (without DEXA) is not loaded on the server. Please check server logs."}), 503
         doctor_id = get_jwt_identity()
         if 'image' not in request.files:
             return jsonify({"status": "error", "message": "No image file provided"}), 400
@@ -588,6 +599,9 @@ def analyze_xray():
             "message": "X-Ray analyzed successfully"
         })
     except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"ERROR in analyze_xray: {error_detail}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/api/v1/predict/ml-dexa', methods=['POST'])
