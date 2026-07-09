@@ -78,10 +78,10 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col">
       <nav className="glass-panel rounded-none border-t-0 border-l-0 border-r-0 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-        <div className="flex items-center gap-2">
+        <button onClick={() => window.location.href = '/admin'} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <Activity className="text-teal-600" />
-          <span className="font-bold text-lg tracking-wide text-slate-800">OsteoVerse <span className="text-slate-500 font-normal">| Admin Hub</span></span>
-        </div>
+          <span className="font-bold text-lg tracking-wide text-slate-800">OsteoCare <span className="text-slate-500 font-normal">| Admin Hub</span></span>
+        </button>
         <div className="flex items-center gap-4">
           <div className="text-right hidden sm:block">
             <div className="text-sm font-medium text-slate-800">System Admin</div>

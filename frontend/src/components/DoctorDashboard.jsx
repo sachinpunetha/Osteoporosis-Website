@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Activity, FileText, CheckCircle2, X, BrainCircuit, BarChart3, ShieldCheck, AlertTriangle, Loader2, ScanFace, Database, Calendar, LogOut, TrendingUp, Heart, Bone, Clock, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { Users, Activity, FileText, CheckCircle2, X, BrainCircuit, BarChart3, ShieldCheck, AlertTriangle, Loader2, ScanFace, Database, Calendar, LogOut, TrendingUp, Heart, Bone, Clock, Filter, ChevronDown, ChevronUp, UploadCloud, Image } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { BASE_URL } from '../utils/api';
 
@@ -205,10 +205,10 @@ const DoctorDashboard = () => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col">
       <nav className="glass-panel rounded-none border-t-0 border-l-0 border-r-0 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-        <div className="flex items-center gap-2">
+        <button onClick={() => window.location.href = '/doctor'} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <Activity className="text-teal-600" />
-          <span className="font-bold text-lg text-slate-800">OsteoVerse Doctor Portal</span>
-        </div>
+          <span className="font-bold text-lg text-slate-800">OsteoCare Doctor Portal</span>
+        </button>
         <button onClick={() => { localStorage.clear(); window.location.replace('/login'); }} className="text-slate-600 hover:text-red-500 transition-colors ml-4 flex items-center gap-2">
           <LogOut size={20} />
           <span className="hidden sm:inline text-sm font-bold">Logout</span>
@@ -275,14 +275,22 @@ const DoctorDashboard = () => {
                     />
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-4 mb-4">
                     <button onClick={() => handleRequest('DEXA')} className="btn-primary flex-col py-4 gap-2">
                       <FileText /> Request DEXA Scan
                     </button>
-                    <button onClick={() => handleRequest('Reviewed')} className="glass-card flex-col py-4 gap-2 text-slate-700 hover:text-slate-800 hover:border-white">
-                      <CheckCircle2 /> Mark as Reviewed
+                    <button onClick={() => handleRequest('X-Ray')} className="btn-primary flex-col py-4 gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-indigo-900/20 border-indigo-500">
+                      <Image /> Request X-Ray Scan
                     </button>
                   </div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="h-px bg-slate-200 flex-1"></div>
+                    <span className="text-xs font-bold text-slate-400">OR</span>
+                    <div className="h-px bg-slate-200 flex-1"></div>
+                  </div>
+                  <button onClick={() => handleRequest('Reviewed')} className="w-full glass-card flex-col py-4 gap-2 text-slate-700 hover:text-slate-800 hover:border-white">
+                    <CheckCircle2 /> Mark as Reviewed
+                  </button>
                 </div>
               ) : (
                 <div className="bg-amber-500/10 border border-amber-500/30 p-6 rounded-xl">
@@ -431,12 +439,12 @@ const DoctorDashboard = () => {
                         <div className="text-4xl font-black text-rose-800">{stats.osteoporosis}</div>
                       </div>
                       
-                      <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-5 border border-emerald-200 shadow-sm transition-transform hover:-translate-y-1">
-                        <div className="flex items-center gap-2 text-emerald-700 mb-2">
-                          <Heart size={18} />
-                          <span className="text-sm font-bold uppercase tracking-wide">Healthy</span>
+                      <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-5 border border-amber-200 shadow-sm transition-transform hover:-translate-y-1">
+                        <div className="flex items-center gap-2 text-amber-700 mb-2">
+                          <AlertTriangle size={18} />
+                          <span className="text-sm font-bold uppercase tracking-wide">High Risk (Initial)</span>
                         </div>
-                        <div className="text-4xl font-black text-emerald-800">{stats.healthy}</div>
+                        <div className="text-4xl font-black text-amber-800">{stats.high_risk_initial}</div>
                       </div>
                     </div>
 
@@ -540,6 +548,65 @@ const DoctorDashboard = () => {
             </div>
             
             <button onClick={handlePredictDexa} className="btn-primary w-full">Generate AI Prediction & Report</button>
+          </div>
+        </div>
+      )}
+      {/* X-Ray Modal */}
+      {actionModal === 'x-ray' && (
+        <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-4xl w-full p-8 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-slate-800">X-Ray Scan Analysis</h2>
+              <button onClick={() => setActionModal(null)} className="text-slate-600 hover:text-slate-800"><X /></button>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Side: Upload */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 mb-3">X-Ray Image</h3>
+                <div className="border-2 border-dashed border-slate-300 rounded-2xl p-10 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer h-64">
+                  <div className="bg-slate-200 p-4 rounded-full mb-4 text-teal-600">
+                    <UploadCloud size={32} />
+                  </div>
+                  <p className="font-bold text-slate-700 mb-1">Click to upload or drag and drop</p>
+                  <p className="text-xs text-slate-500 mb-4">PNG, JPG or DICOM (max. 10MB)</p>
+                  <button className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 shadow-sm">Select File</button>
+                </div>
+              </div>
+
+              {/* Right Side: Form */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 mb-3">Optional Clinical Data</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 block mb-1">Patient Name</label>
+                    <input 
+                      type="text" 
+                      value={selectedPatient?.name || ''} 
+                      readOnly
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-700 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 block mb-1">Report Output Format</label>
+                    <select className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-sm text-slate-700 cursor-pointer">
+                      <option>PDF Report</option>
+                      <option>Raw Data JSON</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
+              <button onClick={() => setActionModal(null)} className="px-6 py-2 rounded-xl text-slate-600 font-bold hover:bg-slate-100 transition-colors border border-slate-200 bg-white">Cancel</button>
+              <button onClick={() => {
+                setActionModal(null);
+                alert("X-Ray Analysis endpoint not connected yet.");
+              }} className="px-6 py-2 rounded-xl bg-teal-600 text-white font-bold hover:bg-teal-700 shadow-lg shadow-teal-900/20">
+                Analyze Scan
+              </button>
+            </div>
           </div>
         </div>
       )}

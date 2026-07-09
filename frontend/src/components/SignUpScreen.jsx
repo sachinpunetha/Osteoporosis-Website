@@ -34,7 +34,7 @@ export default function SignUpScreen() {
           <div className="w-8 h-8 rounded-lg bg-primary-700 flex items-center justify-center">
             <svg width="14" height="14" viewBox="0 0 64 64" fill="none"><rect x="28" y="4" width="8" height="56" rx="4" fill="white"/><rect x="4" y="28" width="56" height="8" rx="4" fill="white"/></svg>
           </div>
-          <span className="text-primary-800 font-bold text-xl">OsteoVerse</span>
+          <span className="text-primary-800 font-bold text-xl">OsteoCare</span>
         </div>
 
         <div className="card">

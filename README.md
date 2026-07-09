@@ -1,6 +1,6 @@
-# OsteoVerse-AI
+# OsteoCare-AI
 
-OsteoVerse-AI is a comprehensive, AI-powered diagnostic platform designed to assist healthcare professionals in predicting and diagnosing Osteoporosis. The platform integrates a full clinical pipeline, allowing for multi-modal patient assessment including initial clinical questionnaires and tabular DEXA scan analysis.
+OsteoCare-AI is a comprehensive, AI-powered diagnostic platform designed to assist healthcare professionals in predicting and diagnosing Osteoporosis. The platform integrates a full clinical pipeline, allowing for multi-modal patient assessment including initial clinical questionnaires and tabular DEXA scan analysis.
 
 ## 🚀 Key Features
 
@@ -52,4 +52,4 @@ The following accounts are pre-configured in the Neon PostgreSQL database for te
 *   **Doctor:** `doctor@osteoverse.com` | Password: `doctor123`
 
 ## 👥 Contributors
-Developed by the OsteoVerse AI Team.
+Developed by the OsteoCare AI Team.

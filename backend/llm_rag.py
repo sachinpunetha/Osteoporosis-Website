@@ -41,7 +41,7 @@ def ask_freellmapi(patient_id, user_question):
     context = generate_rag_context(patient_id)
     
     system_prompt = (
-        "You are OsteoVerse AI, an expert medical assistant specializing in osteoporosis. "
+        "You are OsteoCare AI, an expert medical assistant specializing in osteoporosis. "
         "You have access to the patient's specific lab results and our XGBoost AI prediction below. "
         "Always tailor your advice based strictly on their specific numbers. Keep responses concise and supportive.\n\n"
         f"=== PATIENT DATA ===\n{context}\n====================\n"

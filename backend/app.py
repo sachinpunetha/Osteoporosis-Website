@@ -579,35 +579,68 @@ def download_report(patient_id):
         pdf.add_page()
         
         # Header
-        pdf.set_font("Arial", 'B', 16)
-        pdf.cell(0, 10, txt="OsteoVerse Medical Report", ln=1, align='C')
-        pdf.ln(10)
+        pdf.set_font("Arial", 'B', 20)
+        pdf.set_text_color(13, 148, 136) # Teal color
+        pdf.cell(0, 15, txt="OsteoCare Medical Report", ln=1, align='C')
+        pdf.ln(5)
         
+        def render_table(title, data):
+            pdf.set_font("Arial", 'B', 14)
+            pdf.set_text_color(30, 41, 59) # Slate 800
+            pdf.cell(0, 10, txt=title, ln=1, align='L')
+            
+            pdf.set_font("Arial", 'B', 11)
+            pdf.set_fill_color(241, 245, 249) # Slate 100
+            pdf.set_text_color(71, 85, 105) # Slate 600
+            
+            # Draw Table
+            for key, value in data.items():
+                pdf.cell(80, 10, txt=f" {key}", border=1, fill=True)
+                
+                pdf.set_font("Arial", '', 11)
+                pdf.set_fill_color(255, 255, 255)
+                pdf.set_text_color(15, 23, 42) # Slate 900
+                pdf.cell(110, 10, txt=f" {value}", border=1, ln=1, fill=True)
+                
+                pdf.set_font("Arial", 'B', 11)
+                pdf.set_fill_color(241, 245, 249)
+                pdf.set_text_color(71, 85, 105)
+                
+            pdf.ln(8)
+
         # Patient Details
-        pdf.set_font("Arial", 'B', 12)
-        pdf.cell(0, 8, txt="Patient Details", ln=1, align='L')
-        pdf.set_font("Arial", '', 12)
-        pdf.cell(0, 8, txt=f"Name: {user.name if user else 'Unknown'}", ln=1, align='L')
-        pdf.cell(0, 8, txt=f"Age: {patient.age}", ln=1, align='L')
-        pdf.cell(0, 8, txt=f"Gender: {patient.gender}", ln=1, align='L')
-        pdf.ln(5)
+        patient_data = {
+            "Patient Name": user.name if user else 'Unknown',
+            "Age": str(patient.age),
+            "Gender": patient.gender,
+            "Race/Ethnicity": patient.race_ethnicity or "N/A"
+        }
+        render_table("Patient Demographics", patient_data)
         
-        # Assessment Details
-        pdf.set_font("Arial", 'B', 12)
-        pdf.cell(0, 8, txt="Assessment Results", ln=1, align='L')
-        pdf.set_font("Arial", '', 12)
-        pdf.cell(0, 8, txt=f"Initial Questionnaire Risk: {patient.initial_prediction or 'N/A'}", ln=1, align='L')
-        pdf.cell(0, 8, txt=f"Final DEXA AI Prediction: {patient.final_prediction or 'N/A'}", ln=1, align='L')
-        pdf.ln(5)
+        # Clinical Questionnaire (Select fields)
+        clinical_data = {
+            "Body Weight Category": patient.body_weight or "N/A",
+            "Physical Activity": patient.physical_activity or "N/A",
+            "Smoking History": patient.smoking or "N/A",
+            "Prior Fractures": patient.prior_fractures or "N/A"
+        }
+        render_table("Clinical Questionnaire", clinical_data)
+        
+        # DEXA & Assessment
+        assessment_data = {
+            "Initial AI Risk (No DEXA)": patient.initial_prediction or "N/A",
+            "Final AI Prediction (DEXA)": patient.final_prediction or "Pending",
+        }
+        if patient.bmi:
+            assessment_data["Calculated BMI"] = str(patient.bmi)
+        render_table("AI Assessment & DEXA Results", assessment_data)
         
         # Doctor Notes
-        pdf.set_font("Arial", 'B', 12)
-        pdf.cell(0, 8, txt="Doctor's Notes & Plan", ln=1, align='L')
-        pdf.set_font("Arial", '', 12)
-        pdf.cell(0, 8, txt=f"Prescribed Medication/Advice: {patient.prescribed_medication or 'None'}", ln=1, align='L')
-        
-        if patient.appointment_time:
-            pdf.cell(0, 8, txt=f"Scheduled Appointment: {patient.appointment_time}", ln=1, align='L')
+        notes_data = {
+            "Prescribed Plan / Advice": patient.prescribed_medication or "None",
+            "Next Scheduled Appointment": str(patient.appointment_time) if patient.appointment_time else "Not scheduled"
+        }
+        render_table("Doctor's Notes & Plan", notes_data)
         
         pdf_bytes = pdf.output(dest='S').encode('latin-1')
         return send_file(io.BytesIO(pdf_bytes), mimetype='application/pdf', download_name=f'report_{patient_id}.pdf', as_attachment=True)
