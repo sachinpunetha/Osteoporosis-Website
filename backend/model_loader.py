@@ -1,20 +1,37 @@
 import os
 import pickle
-import torch
-from torchvision import models, transforms
-import torch.nn as nn
-from PIL import Image
 
 # Global Configuration
 DEMO_MODE = False  # Try real mode first
+
+# Try importing torch - if it fails, fall back to demo mode
+try:
+    import torch
+    from torchvision import models, transforms
+    import torch.nn as nn
+    from PIL import Image
+    TORCH_AVAILABLE = True
+except ImportError:
+    print("WARNING: PyTorch not installed. DL model will run in demo mode.")
+    TORCH_AVAILABLE = False
 
 class ModelLoader:
     def __init__(self):
         self.xgb_model = None
         self.image_model = None
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.is_demo = False
         self.warning_msg = None
+        self.classes = ['Normal', 'Osteopenia', 'Osteoporosis']
+        
+        if not TORCH_AVAILABLE:
+            self.is_demo = True
+            self.warning_msg = "PyTorch not installed. Running in synthetic inference mode."
+            self.device = None
+            self.transform = None
+            print(self.warning_msg)
+            return
+
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         
         # Define image transforms
         self.transform = transforms.Compose([
@@ -23,7 +40,6 @@ class ModelLoader:
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
-        self.classes = ['Normal', 'Osteopenia', 'Osteoporosis']
 
         if not DEMO_MODE:
             self._load_clinical_model()
@@ -69,8 +85,7 @@ class ModelLoader:
             
         import pandas as pd
         df = pd.DataFrame([features])
-        proba = self.xgb_model.predict_proba(df)[0]
-        return float(proba[1] + proba.get(2, 0.0))
+        return float(self.xgb_model.predict_proba(df)[0][1])
 
     def predict_image(self, image_path):
         if self.is_demo:

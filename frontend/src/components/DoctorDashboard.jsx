@@ -203,12 +203,12 @@ const DoctorDashboard = () => {
         body: formData
       });
       
+      const text = await res.text();
       let data;
       try {
-        data = await res.json();
+        data = JSON.parse(text);
       } catch(parseErr) {
-        const text = await res.text().catch(() => '');
-        toast.error(`Server error (${res.status}): ${text.substring(0, 100) || 'Non-JSON response'}`);
+        toast.error(`Server error (${res.status}): ${text.substring(0, 150) || 'Empty response'}`);
         setIsProcessing(false);
         setXrayFile(null);
         return;
