@@ -62,11 +62,8 @@ def register():
     password = data.get('password')
     role = data.get('role', 'Patient')
     
-    if User.query.filter_by(email=email).first():
-        return jsonify({"status": "error", "message": "Email already exists. Please choose a different email."}), 400
-        
-    if User.query.filter_by(name=name).first():
-        return jsonify({"status": "error", "message": "Username already exists. Please choose a different username."}), 400
+    if User.query.filter_by(email=email, name=name).first():
+        return jsonify({"status": "error", "message": "An account with this exact username and email combination already exists."}), 400
         
     new_user = User(name=name, email=email, role=role)
     new_user.set_password(password)
@@ -323,6 +320,7 @@ def get_doctor_patients():
                 res.append({
                     "id": p.id,
                     "name": user.name,
+                    "age": p.age,
                     "initialRisk": p.initial_prediction,
                     "request": p.doctor_request,
                     "questionnaire_filled": p.questionnaire_filled,
@@ -376,7 +374,7 @@ def get_doctor_stats():
         high_risk = sum(1 for p in profiles if p.initial_prediction == 'High Risk')
         low_risk = sum(1 for p in profiles if p.initial_prediction == 'Low Risk')
         reviewed = sum(1 for p in profiles if p.doctor_request == 'Reviewed')
-        pending = sum(1 for p in profiles if p.final_prediction is None and p.questionnaire_filled)
+        pending = total - reviewed
         with_dexa = sum(1 for p in profiles if p.final_prediction is not None)
         
         return jsonify({

@@ -93,6 +93,13 @@ const DoctorDashboard = () => {
     fetchStats(dateFrom, dateTo, genderFilter, ageGroupFilter);
   }, [dateFrom, dateTo, genderFilter, ageGroupFilter]);
 
+  const handleSelectPatient = (p) => {
+    setSelectedPatient(p);
+    if (p.age) {
+      setForm(prev => ({ ...prev, age: p.age }));
+    }
+  };
+
   const set = (field, val) => {
     setForm(f => {
       const updated = { ...f, [field]: val };
@@ -202,7 +209,7 @@ const DoctorDashboard = () => {
           <Activity className="text-teal-600" />
           <span className="font-bold text-lg text-slate-800">OsteoVerse Doctor Portal</span>
         </div>
-        <button onClick={() => { localStorage.clear(); window.location.href = '/'; }} className="text-slate-600 hover:text-red-500 transition-colors ml-4 flex items-center gap-2">
+        <button onClick={() => { localStorage.clear(); window.location.replace('/login'); }} className="text-slate-600 hover:text-red-500 transition-colors ml-4 flex items-center gap-2">
           <LogOut size={20} />
           <span className="hidden sm:inline text-sm font-bold">Logout</span>
         </button>
@@ -217,7 +224,7 @@ const DoctorDashboard = () => {
           {patients.map(p => (
             <div 
               key={p.id} 
-              onClick={() => setSelectedPatient(p)}
+              onClick={() => handleSelectPatient(p)}
               className={`glass-card p-4 cursor-pointer transition-all ${selectedPatient?.id === p.id ? 'border-teal-400 bg-teal-900/20' : 'hover:border-slate-500'}`}
             >
               <div className="font-bold text-slate-800">{p.name}</div>
@@ -319,10 +326,10 @@ const DoctorDashboard = () => {
               )}
             </div>
           ) : (
-            <div className="flex gap-6 animate-fade-in">
+            <div className="flex flex-col lg:flex-row gap-6 animate-fade-in">
               
               {/* Left Sidebar - Filters */}
-              <div className="w-1/4 shrink-0 flex flex-col gap-4">
+              <div className="w-full lg:w-1/4 shrink-0 flex flex-col gap-4">
                 <div className="glass-panel p-5 sticky top-24">
                   <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4 flex items-center gap-2">
                     <Filter size={16} className="text-teal-600" /> Filters
@@ -389,7 +396,7 @@ const DoctorDashboard = () => {
               </div>
 
               {/* Right Content - KPIs and Charts */}
-              <div className="w-3/4 flex flex-col gap-6">
+              <div className="w-full lg:w-3/4 flex flex-col gap-6">
                 
                 {/* Stats Header Area */}
                 <div className="flex items-center justify-between">
@@ -407,7 +414,7 @@ const DoctorDashboard = () => {
                 ) : (
                   <>
                     {/* Top KPI Cards */}
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-2xl p-5 border border-teal-200 shadow-sm transition-transform hover:-translate-y-1">
                         <div className="flex items-center gap-2 text-teal-700 mb-2">
                           <Users size={18} />
@@ -434,7 +441,7 @@ const DoctorDashboard = () => {
                     </div>
 
                     {/* Charts Section */}
-                    <div className="grid grid-cols-2 gap-6 mt-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2">
                       
                       {/* Status Breakdown (Pending vs Reviewed) */}
                       <div className="glass-panel p-5 rounded-2xl flex flex-col h-72">
@@ -446,8 +453,8 @@ const DoctorDashboard = () => {
                             <PieChart>
                               <Pie
                                 data={[
-                                  { name: 'Pending Review', value: stats.pending_review, color: '#6366f1' },
-                                  { name: 'Reviewed', value: stats.reviewed, color: '#3b82f6' }
+                                  { name: 'Pending Review', value: stats.pending_review, color: '#f59e0b' },
+                                  { name: 'Reviewed', value: stats.reviewed, color: '#10b981' }
                                 ]}
                                 dataKey="value"
                                 nameKey="name"
@@ -457,8 +464,8 @@ const DoctorDashboard = () => {
                                 outerRadius={80}
                                 paddingAngle={5}
                               >
-                                {[{ name: 'Pending Review', value: stats.pending_review, color: '#6366f1' },
-                                  { name: 'Reviewed', value: stats.reviewed, color: '#3b82f6' }].map((entry, index) => (
+                                {[{ name: 'Pending Review', value: stats.pending_review, color: '#f59e0b' },
+                                  { name: 'Reviewed', value: stats.reviewed, color: '#10b981' }].map((entry, index) => (
                                   <Cell key={`cell-${index}`} fill={entry.color} />
                                 ))}
                               </Pie>

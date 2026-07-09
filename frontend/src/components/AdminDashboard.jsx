@@ -90,7 +90,7 @@ const AdminDashboard = () => {
           <div className="w-10 h-10 rounded-full bg-slate-800 border border-teal-500/30 flex items-center justify-center text-teal-600 font-bold">
             AD
           </div>
-          <button onClick={() => { localStorage.clear(); window.location.href = '/'; }} className="text-slate-600 hover:text-red-500 transition-colors ml-4 flex items-center gap-2">
+          <button onClick={() => { localStorage.clear(); window.location.replace('/login'); }} className="text-slate-600 hover:text-red-500 transition-colors ml-4 flex items-center gap-2">
             <LogOut size={20} />
             <span className="hidden sm:inline text-sm font-bold">Logout</span>
           </button>

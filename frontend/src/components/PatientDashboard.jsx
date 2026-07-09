@@ -96,7 +96,7 @@ const PatientDashboard = () => {
             <div className="text-sm font-medium text-slate-800">{user.name}</div>
             <div className="text-xs text-slate-600">Patient Portal</div>
           </div>
-          <button onClick={() => { localStorage.clear(); window.location.href = '/'; }} className="text-slate-600 hover:text-red-500 transition-colors ml-4 flex items-center gap-2">
+          <button onClick={() => { localStorage.clear(); window.location.replace('/login'); }} className="text-slate-600 hover:text-red-500 transition-colors ml-4 flex items-center gap-2">
             <LogOut size={20} />
             <span className="hidden sm:inline text-sm font-bold">Logout</span>
           </button>
