@@ -248,7 +248,13 @@ const DoctorDashboard = () => {
                 )}
               </div>
 
-              {!selectedPatient.request ? (
+              {!selectedPatient.appointment_time ? (
+                <div className="bg-slate-100 border border-slate-200 p-6 rounded-xl text-center mb-6">
+                  <Calendar className="mx-auto text-slate-400 mb-2" size={32} />
+                  <h3 className="text-lg font-bold text-slate-700 mb-2">Appointment Required</h3>
+                  <p className="text-slate-500 text-sm">Please schedule an appointment with the patient below before prescribing medication or requesting scans.</p>
+                </div>
+              ) : !selectedPatient.request ? (
                 <div>
                   <h3 className="text-lg font-medium text-slate-700 mb-4">Doctor Actions</h3>
                   
