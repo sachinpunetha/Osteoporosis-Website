@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Activity, FileText, CheckCircle2, X, BrainCircuit, BarChart3, ShieldCheck, AlertTriangle, Loader2, ScanFace, Database, Calendar, LogOut } from 'lucide-react';
+import { Users, Activity, FileText, CheckCircle2, X, BrainCircuit, BarChart3, ShieldCheck, AlertTriangle, Loader2, ScanFace, Database, Calendar, LogOut, TrendingUp, Heart, Bone, Clock, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import { BASE_URL } from '../utils/api';
 
 const DoctorDashboard = () => {
@@ -11,6 +11,10 @@ const DoctorDashboard = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingText, setProcessingText] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('');
+  const [stats, setStats] = useState(null);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [showDashboard, setShowDashboard] = useState(true);
   
   const DEXA_LABELS = {
     fnt: "Femoral Neck T-Score (DEXA Scan)",
@@ -58,7 +62,31 @@ const DoctorDashboard = () => {
     } catch(err) {
       console.error(err);
     }
+   };
+
+  const fetchStats = async (from, to) => {
+    try {
+      let url = `${BASE_URL}/api/v1/doctor/stats`;
+      const params = new URLSearchParams();
+      if (from) params.append('date_from', from);
+      if (to) params.append('date_to', to);
+      if (params.toString()) url += `?${params.toString()}`;
+      
+      const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('osteocare_token')}` }
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        setStats(data.stats);
+      }
+    } catch (err) {
+      console.error('Stats fetch error:', err);
+    }
   };
+
+  useEffect(() => {
+    fetchStats(dateFrom, dateTo);
+  }, [dateFrom, dateTo]);
 
   const set = (field, val) => {
     setForm(f => {
@@ -175,8 +203,125 @@ const DoctorDashboard = () => {
         </button>
       </nav>
 
-      <main className="max-w-6xl mx-auto p-6 grid lg:grid-cols-3 gap-6 mt-6 w-full flex-1">
+      <main className="max-w-6xl mx-auto p-6 space-y-6 mt-6 w-full flex-1">
         
+        {/* Analytics Dashboard */}
+        <div className="glass-panel p-5">
+          <div className="flex items-center justify-between mb-4">
+            <button 
+              onClick={() => setShowDashboard(!showDashboard)}
+              className="flex items-center gap-2 text-lg font-bold text-slate-800 hover:text-teal-600 transition-colors"
+            >
+              <TrendingUp className="text-teal-600" size={22} />
+              Analytics Dashboard
+              {showDashboard ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </button>
+            <div className="flex items-center gap-3">
+              <Filter size={16} className="text-slate-500" />
+              <input 
+                type="date" 
+                value={dateFrom} 
+                onChange={e => setDateFrom(e.target.value)}
+                className="input-glass text-sm px-3 py-1.5"
+                placeholder="From"
+              />
+              <span className="text-slate-400">to</span>
+              <input 
+                type="date" 
+                value={dateTo} 
+                onChange={e => setDateTo(e.target.value)}
+                className="input-glass text-sm px-3 py-1.5"
+                placeholder="To"
+              />
+              {(dateFrom || dateTo) && (
+                <button 
+                  onClick={() => { setDateFrom(''); setDateTo(''); }}
+                  className="text-xs text-red-500 hover:text-red-700 font-semibold"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {showDashboard && stats && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 animate-fade-in">
+              <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-4 border border-teal-200">
+                <div className="flex items-center gap-2 text-teal-700 mb-2">
+                  <Users size={18} />
+                  <span className="text-xs font-semibold uppercase tracking-wide">Total Patients</span>
+                </div>
+                <div className="text-3xl font-black text-teal-800">{stats.total_patients}</div>
+              </div>
+              
+              <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl p-4 border border-rose-200">
+                <div className="flex items-center gap-2 text-rose-700 mb-2">
+                  <Bone size={18} />
+                  <span className="text-xs font-semibold uppercase tracking-wide">Osteoporosis</span>
+                </div>
+                <div className="text-3xl font-black text-rose-800">{stats.osteoporosis}</div>
+              </div>
+              
+              <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border border-amber-200">
+                <div className="flex items-center gap-2 text-amber-700 mb-2">
+                  <AlertTriangle size={18} />
+                  <span className="text-xs font-semibold uppercase tracking-wide">Osteopenia</span>
+                </div>
+                <div className="text-3xl font-black text-amber-800">{stats.osteopenia}</div>
+              </div>
+              
+              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4 border border-emerald-200">
+                <div className="flex items-center gap-2 text-emerald-700 mb-2">
+                  <Heart size={18} />
+                  <span className="text-xs font-semibold uppercase tracking-wide">Healthy</span>
+                </div>
+                <div className="text-3xl font-black text-emerald-800">{stats.healthy}</div>
+              </div>
+              
+              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border border-indigo-200">
+                <div className="flex items-center gap-2 text-indigo-700 mb-2">
+                  <Clock size={18} />
+                  <span className="text-xs font-semibold uppercase tracking-wide">Pending</span>
+                </div>
+                <div className="text-3xl font-black text-indigo-800">{stats.pending_review}</div>
+              </div>
+
+              <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border border-red-200">
+                <div className="flex items-center gap-2 text-red-700 mb-2">
+                  <AlertTriangle size={18} />
+                  <span className="text-xs font-semibold uppercase tracking-wide">High Risk (Initial)</span>
+                </div>
+                <div className="text-3xl font-black text-red-800">{stats.high_risk_initial}</div>
+              </div>
+
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+                <div className="flex items-center gap-2 text-green-700 mb-2">
+                  <ShieldCheck size={18} />
+                  <span className="text-xs font-semibold uppercase tracking-wide">Low Risk (Initial)</span>
+                </div>
+                <div className="text-3xl font-black text-green-800">{stats.low_risk_initial}</div>
+              </div>
+
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+                <div className="flex items-center gap-2 text-blue-700 mb-2">
+                  <CheckCircle2 size={18} />
+                  <span className="text-xs font-semibold uppercase tracking-wide">Reviewed</span>
+                </div>
+                <div className="text-3xl font-black text-blue-800">{stats.reviewed}</div>
+              </div>
+
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+                <div className="flex items-center gap-2 text-purple-700 mb-2">
+                  <BrainCircuit size={18} />
+                  <span className="text-xs font-semibold uppercase tracking-wide">DEXA Done</span>
+                </div>
+                <div className="text-3xl font-black text-purple-800">{stats.dexa_completed}</div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
         {/* Patient List */}
         <div className="lg:col-span-1 space-y-4">
           <h2 className="text-xl font-bold text-slate-800 mb-4">Assigned Patients</h2>
@@ -286,6 +431,7 @@ const DoctorDashboard = () => {
           )}
         </div>
 
+      </div>
       </main>
 
       {/* Modals */}

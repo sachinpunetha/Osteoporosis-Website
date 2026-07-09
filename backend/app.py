@@ -332,6 +332,51 @@ def get_doctor_patients():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/api/v1/doctor/stats', methods=['GET'])
+@jwt_required()
+def get_doctor_stats():
+    try:
+        doctor_id = get_jwt_identity()
+        from datetime import datetime
+        
+        date_from = request.args.get('date_from')
+        date_to = request.args.get('date_to')
+        
+        query = PatientProfile.query.filter_by(assigned_doctor_id=doctor_id)
+        
+        if date_from:
+            query = query.filter(PatientProfile.created_at >= datetime.strptime(date_from, '%Y-%m-%d'))
+        if date_to:
+            query = query.filter(PatientProfile.created_at <= datetime.strptime(date_to + ' 23:59:59', '%Y-%m-%d %H:%M:%S'))
+        
+        profiles = query.all()
+        
+        total = len(profiles)
+        osteoporosis = sum(1 for p in profiles if p.final_prediction == 'Osteoporosis')
+        osteopenia = sum(1 for p in profiles if p.final_prediction == 'Osteopenia')
+        healthy = sum(1 for p in profiles if p.final_prediction == 'Healthy' or p.final_prediction == 'Normal')
+        high_risk = sum(1 for p in profiles if p.initial_prediction == 'High Risk')
+        low_risk = sum(1 for p in profiles if p.initial_prediction == 'Low Risk')
+        reviewed = sum(1 for p in profiles if p.doctor_request == 'Reviewed')
+        pending = sum(1 for p in profiles if p.final_prediction is None and p.questionnaire_filled)
+        with_dexa = sum(1 for p in profiles if p.final_prediction is not None)
+        
+        return jsonify({
+            "status": "success",
+            "stats": {
+                "total_patients": total,
+                "osteoporosis": osteoporosis,
+                "osteopenia": osteopenia,
+                "healthy": healthy,
+                "high_risk_initial": high_risk,
+                "low_risk_initial": low_risk,
+                "reviewed": reviewed,
+                "pending_review": pending,
+                "dexa_completed": with_dexa
+            }
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 @app.route('/auth/login', methods=['POST'])
 def login():
     data = request.json
