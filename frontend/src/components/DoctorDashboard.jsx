@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Activity, FileText, CheckCircle2, X, BrainCircuit, BarChart3, ShieldCheck, AlertTriangle, Loader2, ScanFace, Database, Calendar, LogOut, TrendingUp, Heart, Bone, Clock, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { BASE_URL } from '../utils/api';
 
 const DoctorDashboard = () => {
@@ -14,6 +15,8 @@ const DoctorDashboard = () => {
   const [stats, setStats] = useState(null);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [genderFilter, setGenderFilter] = useState('All');
+  const [ageGroupFilter, setAgeGroupFilter] = useState('All');
   const [showDashboard, setShowDashboard] = useState(true);
   
   const DEXA_LABELS = {
@@ -64,12 +67,14 @@ const DoctorDashboard = () => {
     }
    };
 
-  const fetchStats = async (from, to) => {
+  const fetchStats = async (from, to, gender, ageGroup) => {
     try {
       let url = `${BASE_URL}/api/v1/doctor/stats`;
       const params = new URLSearchParams();
       if (from) params.append('date_from', from);
       if (to) params.append('date_to', to);
+      if (gender && gender !== 'All') params.append('gender', gender);
+      if (ageGroup && ageGroup !== 'All') params.append('age_group', ageGroup);
       if (params.toString()) url += `?${params.toString()}`;
       
       const res = await fetch(url, {
@@ -85,8 +90,8 @@ const DoctorDashboard = () => {
   };
 
   useEffect(() => {
-    fetchStats(dateFrom, dateTo);
-  }, [dateFrom, dateTo]);
+    fetchStats(dateFrom, dateTo, genderFilter, ageGroupFilter);
+  }, [dateFrom, dateTo, genderFilter, ageGroupFilter]);
 
   const set = (field, val) => {
     setForm(f => {
@@ -308,123 +313,185 @@ const DoctorDashboard = () => {
               )}
             </div>
           ) : (
-            <div className="glass-panel p-5 animate-fade-in">
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-2 text-lg font-bold text-slate-800">
-                  <TrendingUp className="text-teal-600" size={22} />
-                  Analytics Dashboard
+            <div className="flex gap-6 animate-fade-in">
+              
+              {/* Left Sidebar - Filters */}
+              <div className="w-1/4 shrink-0 flex flex-col gap-4">
+                <div className="glass-panel p-5 sticky top-24">
+                  <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4 flex items-center gap-2">
+                    <Filter size={16} className="text-teal-600" /> Filters
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-semibold text-slate-600 block mb-1">From Date</label>
+                      <input 
+                        type="date" 
+                        value={dateFrom} 
+                        onChange={e => setDateFrom(e.target.value)}
+                        className="input-glass text-sm w-full py-1.5"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-slate-600 block mb-1">To Date</label>
+                      <input 
+                        type="date" 
+                        value={dateTo} 
+                        onChange={e => setDateTo(e.target.value)}
+                        className="input-glass text-sm w-full py-1.5"
+                      />
+                    </div>
+                    
+                    <div className="pt-2 border-t border-slate-100">
+                      <label className="text-xs font-semibold text-slate-600 block mb-1">Gender</label>
+                      <select 
+                        value={genderFilter} 
+                        onChange={e => setGenderFilter(e.target.value)}
+                        className="input-glass text-sm w-full py-2 cursor-pointer"
+                      >
+                        <option value="All">All Genders</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                      </select>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-100">
+                      <label className="text-xs font-semibold text-slate-600 block mb-1">Age Group</label>
+                      <select 
+                        value={ageGroupFilter} 
+                        onChange={e => setAgeGroupFilter(e.target.value)}
+                        className="input-glass text-sm w-full py-2 cursor-pointer"
+                      >
+                        <option value="All">All Ages</option>
+                        <option value="Teenager (0-17)">Teenager (0-17)</option>
+                        <option value="Young Adult (18-25)">Young Adult (18-25)</option>
+                        <option value="Adult (26-64)">Adult (26-64)</option>
+                        <option value="Senior Citizen (65+)">Senior Citizen (65+)</option>
+                      </select>
+                    </div>
+                    
+                    {(dateFrom || dateTo || genderFilter !== 'All' || ageGroupFilter !== 'All') && (
+                      <button 
+                        onClick={() => { setDateFrom(''); setDateTo(''); setGenderFilter('All'); setAgeGroupFilter('All'); }}
+                        className="w-full mt-4 text-xs font-bold text-red-500 bg-red-50 hover:bg-red-100 py-2 rounded-lg transition-colors border border-red-100"
+                      >
+                        Clear All Filters
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Date Filter */}
-              <div className="flex items-center gap-3 mb-5 flex-wrap">
-                <Filter size={16} className="text-slate-500" />
-                <input 
-                  type="date" 
-                  value={dateFrom} 
-                  onChange={e => setDateFrom(e.target.value)}
-                  className="input-glass text-sm px-3 py-1.5"
-                />
-                <span className="text-slate-400">to</span>
-                <input 
-                  type="date" 
-                  value={dateTo} 
-                  onChange={e => setDateTo(e.target.value)}
-                  className="input-glass text-sm px-3 py-1.5"
-                />
-                {(dateFrom || dateTo) && (
-                  <button 
-                    onClick={() => { setDateFrom(''); setDateTo(''); }}
-                    className="text-xs text-red-500 hover:text-red-700 font-semibold"
-                  >
-                    Clear
-                  </button>
+              {/* Right Content - KPIs and Charts */}
+              <div className="w-3/4 flex flex-col gap-6">
+                
+                {/* Stats Header Area */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xl font-bold text-slate-800">
+                    <TrendingUp className="text-teal-600" size={24} />
+                    Analytics Dashboard
+                  </div>
+                </div>
+
+                {!stats ? (
+                  <div className="text-center text-slate-400 py-12 glass-panel">
+                    <Loader2 className="animate-spin mx-auto mb-2" />
+                    Loading analytics...
+                  </div>
+                ) : (
+                  <>
+                    {/* Top KPI Cards */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-2xl p-5 border border-teal-200 shadow-sm transition-transform hover:-translate-y-1">
+                        <div className="flex items-center gap-2 text-teal-700 mb-2">
+                          <Users size={18} />
+                          <span className="text-sm font-bold uppercase tracking-wide">Total Patients</span>
+                        </div>
+                        <div className="text-4xl font-black text-teal-800">{stats.total_patients}</div>
+                      </div>
+                      
+                      <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-2xl p-5 border border-rose-200 shadow-sm transition-transform hover:-translate-y-1">
+                        <div className="flex items-center gap-2 text-rose-700 mb-2">
+                          <Bone size={18} />
+                          <span className="text-sm font-bold uppercase tracking-wide">Osteoporosis</span>
+                        </div>
+                        <div className="text-4xl font-black text-rose-800">{stats.osteoporosis}</div>
+                      </div>
+                      
+                      <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-5 border border-emerald-200 shadow-sm transition-transform hover:-translate-y-1">
+                        <div className="flex items-center gap-2 text-emerald-700 mb-2">
+                          <Heart size={18} />
+                          <span className="text-sm font-bold uppercase tracking-wide">Healthy</span>
+                        </div>
+                        <div className="text-4xl font-black text-emerald-800">{stats.healthy}</div>
+                      </div>
+                    </div>
+
+                    {/* Charts Section */}
+                    <div className="grid grid-cols-2 gap-6 mt-2">
+                      
+                      {/* Status Breakdown (Pending vs Reviewed) */}
+                      <div className="glass-panel p-5 rounded-2xl flex flex-col h-72">
+                        <h4 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+                          <Clock size={16} className="text-indigo-500"/> Workflow Status (Pending vs Reviewed)
+                        </h4>
+                        <div className="flex-1 min-h-0">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={[
+                                  { name: 'Pending Review', value: stats.pending_review, color: '#6366f1' },
+                                  { name: 'Reviewed', value: stats.reviewed, color: '#3b82f6' }
+                                ]}
+                                dataKey="value"
+                                nameKey="name"
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={60}
+                                outerRadius={80}
+                                paddingAngle={5}
+                              >
+                                {[{ name: 'Pending Review', value: stats.pending_review, color: '#6366f1' },
+                                  { name: 'Reviewed', value: stats.reviewed, color: '#3b82f6' }].map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                              <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+
+                      {/* Action Bar Chart */}
+                      <div className="glass-panel p-5 rounded-2xl flex flex-col h-72">
+                        <h4 className="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+                          <BarChart3 size={16} className="text-blue-500"/> Patient Throughput
+                        </h4>
+                        <div className="flex-1 min-h-0">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                              data={[
+                                { name: 'Pending', count: stats.pending_review, fill: '#818cf8' },
+                                { name: 'Reviewed', count: stats.reviewed, fill: '#60a5fa' },
+                                { name: 'Osteoporosis', count: stats.osteoporosis, fill: '#fb7185' }
+                              ]}
+                              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
+                              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} allowDecimals={false} />
+                              <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                              <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+
+                    </div>
+                  </>
                 )}
               </div>
-
-              {/* Stats Grid */}
-              {stats && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-4 border border-teal-200">
-                    <div className="flex items-center gap-2 text-teal-700 mb-1">
-                      <Users size={16} />
-                      <span className="text-xs font-semibold uppercase tracking-wide">Total Patients</span>
-                    </div>
-                    <div className="text-3xl font-black text-teal-800">{stats.total_patients}</div>
-                  </div>
-                  
-                  <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl p-4 border border-rose-200">
-                    <div className="flex items-center gap-2 text-rose-700 mb-1">
-                      <Bone size={16} />
-                      <span className="text-xs font-semibold uppercase tracking-wide">Osteoporosis</span>
-                    </div>
-                    <div className="text-3xl font-black text-rose-800">{stats.osteoporosis}</div>
-                  </div>
-                  
-                  <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border border-amber-200">
-                    <div className="flex items-center gap-2 text-amber-700 mb-1">
-                      <AlertTriangle size={16} />
-                      <span className="text-xs font-semibold uppercase tracking-wide">Osteopenia</span>
-                    </div>
-                    <div className="text-3xl font-black text-amber-800">{stats.osteopenia}</div>
-                  </div>
-                  
-                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4 border border-emerald-200">
-                    <div className="flex items-center gap-2 text-emerald-700 mb-1">
-                      <Heart size={16} />
-                      <span className="text-xs font-semibold uppercase tracking-wide">Healthy</span>
-                    </div>
-                    <div className="text-3xl font-black text-emerald-800">{stats.healthy}</div>
-                  </div>
-                  
-                  <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border border-red-200">
-                    <div className="flex items-center gap-2 text-red-700 mb-1">
-                      <AlertTriangle size={16} />
-                      <span className="text-xs font-semibold uppercase tracking-wide">High Risk</span>
-                    </div>
-                    <div className="text-3xl font-black text-red-800">{stats.high_risk_initial}</div>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
-                    <div className="flex items-center gap-2 text-green-700 mb-1">
-                      <ShieldCheck size={16} />
-                      <span className="text-xs font-semibold uppercase tracking-wide">Low Risk</span>
-                    </div>
-                    <div className="text-3xl font-black text-green-800">{stats.low_risk_initial}</div>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border border-indigo-200">
-                    <div className="flex items-center gap-2 text-indigo-700 mb-1">
-                      <Clock size={16} />
-                      <span className="text-xs font-semibold uppercase tracking-wide">Pending</span>
-                    </div>
-                    <div className="text-3xl font-black text-indigo-800">{stats.pending_review}</div>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
-                    <div className="flex items-center gap-2 text-blue-700 mb-1">
-                      <CheckCircle2 size={16} />
-                      <span className="text-xs font-semibold uppercase tracking-wide">Reviewed</span>
-                    </div>
-                    <div className="text-3xl font-black text-blue-800">{stats.reviewed}</div>
-                  </div>
-
-                  <div className="col-span-2 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
-                    <div className="flex items-center gap-2 text-purple-700 mb-1">
-                      <BrainCircuit size={16} />
-                      <span className="text-xs font-semibold uppercase tracking-wide">DEXA Completed</span>
-                    </div>
-                    <div className="text-3xl font-black text-purple-800">{stats.dexa_completed}</div>
-                  </div>
-                </div>
-              )}
-
-              {!stats && (
-                <div className="text-center text-slate-400 py-8">
-                  <Loader2 className="animate-spin mx-auto mb-2" />
-                  Loading analytics...
-                </div>
-              )}
             </div>
           )}
         </div>

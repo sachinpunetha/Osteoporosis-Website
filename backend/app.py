@@ -344,6 +344,8 @@ def get_doctor_stats():
         
         date_from = request.args.get('date_from')
         date_to = request.args.get('date_to')
+        gender = request.args.get('gender')
+        age_group = request.args.get('age_group')
         
         query = PatientProfile.query.filter_by(assigned_doctor_id=doctor_id)
         
@@ -351,6 +353,19 @@ def get_doctor_stats():
             query = query.filter(PatientProfile.created_at >= datetime.strptime(date_from, '%Y-%m-%d'))
         if date_to:
             query = query.filter(PatientProfile.created_at <= datetime.strptime(date_to + ' 23:59:59', '%Y-%m-%d %H:%M:%S'))
+        
+        if gender and gender != 'All':
+            query = query.filter(PatientProfile.gender == gender)
+            
+        if age_group and age_group != 'All':
+            if age_group == 'Teenager (0-17)':
+                query = query.filter(PatientProfile.age >= 0, PatientProfile.age <= 17)
+            elif age_group == 'Young Adult (18-25)':
+                query = query.filter(PatientProfile.age >= 18, PatientProfile.age <= 25)
+            elif age_group == 'Adult (26-64)':
+                query = query.filter(PatientProfile.age >= 26, PatientProfile.age <= 64)
+            elif age_group == 'Senior Citizen (65+)':
+                query = query.filter(PatientProfile.age >= 65)
         
         profiles = query.all()
         
