@@ -105,7 +105,7 @@ const AdminDashboard = () => {
             <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
               <Users className="text-teal-600" size={20} /> Add Internal User
             </h3>
-            <div className="text-slate-600 text-sm mb-4">Manually register new Doctors.</div>
+            <div className="text-slate-600 text-sm mb-4">Manually register new Doctors or Admins.</div>
             
             <form className="space-y-4" onSubmit={async (e) => {
               e.preventDefault();
@@ -132,7 +132,10 @@ const AdminDashboard = () => {
               <input type="text" name="name" placeholder="Full Name" required className="w-full input-glass py-2" />
               <input type="email" name="email" placeholder="Email Address" required className="w-full input-glass py-2" />
               <input type="password" name="password" placeholder="Password" required className="w-full input-glass py-2" />
-              <input type="hidden" name="role" value="Doctor" />
+              <select name="role" required className="w-full input-glass py-2 bg-white text-slate-800">
+                <option value="Doctor">Doctor</option>
+                <option value="Admin">Admin</option>
+              </select>
               <button type="submit" className="w-full btn-primary py-2 text-sm mt-2">Create Account</button>
             </form>
           </div>
