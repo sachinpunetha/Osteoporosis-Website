@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, AlertCircle, FileText, Pill, Calendar, LogOut } from 'lucide-react';
+import { Activity, AlertCircle, FileText, Pill, Calendar, LogOut, MessageSquare } from 'lucide-react';
 import { BASE_URL } from '../utils/api';
 
 const PatientDashboard = () => {
@@ -295,6 +295,17 @@ const PatientDashboard = () => {
               </div>
             )}
 
+            {/* Chatbot Section */}
+            <div className="bg-white/60 border border-slate-200 rounded-xl p-6 flex flex-col gap-4 animate-slide-up mt-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-2">
+                <MessageSquare className="text-teal-600" size={28} />
+                <h3 className="text-lg font-bold text-slate-800">Ask Anything</h3>
+              </div>
+              <div className="w-full h-[500px] rounded-xl overflow-hidden border border-slate-200">
+                <zapier-interfaces-chatbot-embed is-popup="false" chatbot-id="cmr8uxrg5002tkpepo5u4omgi" height="500px" width="100%"></zapier-interfaces-chatbot-embed>
+              </div>
+            </div>
+            
             {/* Doctor Request Alert */}
             {profile.doctor_request && profile.doctor_request !== 'Reviewed' && (
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6 flex gap-4 animate-slide-up">
@@ -314,42 +325,32 @@ const PatientDashboard = () => {
             
 
             
-            {/* Download Report Section */}
-            {profile.pdf_url && (
-              <div className="pt-4 animate-slide-up">
+            <div className="pt-6 flex flex-wrap justify-center items-center gap-4 animate-slide-up">
+              {profile.pdf_url && (
                 <a 
                   href={`${BASE_URL}${profile.pdf_url}`} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="w-full flex items-center justify-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 px-6 py-3 rounded-xl font-bold transition-colors"
+                  className="inline-flex items-center justify-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 px-6 py-2 rounded-lg font-bold transition-colors"
                 >
                   <FileText size={20} />
-                  Download Medical Report (PDF)
+                  View Medical Report
                 </a>
-              </div>
-            )}
-            
-            <div className="pt-6 text-center animate-slide-up">
-              <button onClick={() => setIsRetaking(true)} className="btn-secondary border border-teal-500/30 text-teal-600 hover:bg-teal-500/10 px-6 py-2 rounded-lg transition-colors">
-                Submit New Assessment
-              </button>
+              )}
+              {(!profile.doctor_request && !profile.prescribed_medication && !profile.final_prediction && !profile.is_discharged) ? (
+                <button disabled className="btn-secondary border border-slate-300 text-slate-400 bg-slate-50 cursor-not-allowed px-6 py-2 rounded-lg transition-colors" title="Please wait for the doctor to review your current assessment first.">
+                  Submit New Assessment
+                </button>
+              ) : (
+                <button onClick={() => setIsRetaking(true)} className="btn-secondary border border-teal-500/30 text-teal-600 hover:bg-teal-500/10 px-6 py-2 rounded-lg transition-colors">
+                  Submit New Assessment
+                </button>
+              )}
             </div>
           </>
         )}
 
       </main>
-      
-      {profile?.questionnaire_filled && (
-        <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
-          <div className="mb-4 mr-2 relative animate-bounce">
-            <div className="bg-white px-4 py-2 rounded-2xl shadow-lg border border-teal-100 text-teal-800 font-bold text-sm">
-              Ask me anything!
-            </div>
-            <div className="absolute -bottom-2 right-4 w-4 h-4 bg-white border-b border-r border-teal-100 rotate-45 shadow-sm rounded-br-sm"></div>
-          </div>
-          <zapier-interfaces-chatbot-embed is-popup="true" default-open="false" chatbot-id="cmr8uxrg5002tkpepo5u4omgi"></zapier-interfaces-chatbot-embed>
-        </div>
-      )}
     </div>
   );
 };

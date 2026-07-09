@@ -58,6 +58,8 @@ class PatientProfile(db.Model):
     discharge_feedback = db.Column(db.Text, nullable=True)
     
     # New Simplified Flow Fields
+    xray_risk_score = db.Column(db.Float, nullable=True)
+    clinical_risk_score = db.Column(db.Float, nullable=True)
     initial_prediction = db.Column(db.String(100), nullable=True) # High Risk / Low Risk
     doctor_request = db.Column(db.String(100), nullable=True) # None, DEXA, XRay, Discharged
     final_prediction = db.Column(db.String(100), nullable=True) # Healthy / Osteoporosis

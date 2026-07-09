@@ -8,9 +8,11 @@ import io
 from flask import send_file
 import pandas as pd
 import os
+import tempfile
 from models import db, User, PatientProfile, ClinicalRecord, Prediction, Appointment
 from llm_rag import ask_freellmapi
 from api_routes import api_bp
+from model_loader import ai_system
 
 app = Flask(__name__, static_folder='../frontend/dist', static_url_path='/')
 # Enable CORS, defaulting to all origins unless FRONTEND_URL is set in the environment
@@ -37,8 +39,22 @@ without_dexa_path = os.path.join(MODELS_BASE_DIR, "ML_MODEL(WITHOUTDEXA)", "oste
 try:
     saved_dexa = joblib.load(with_dexa_path)
     model_with_dexa = saved_dexa["model"]
-    scaler_with_dexa = saved_dexa["scaler"]
     features_with_dexa = saved_dexa["features"]
+    
+    # Load the reconstructed scaler and outlier clipping bounds
+    real_scaler_path = os.path.join(MODELS_BASE_DIR, "ML_MODEL(WITH DEXA)", "real_scaler_and_bounds.joblib")
+    scaler_data = joblib.load(real_scaler_path)
+    scaler_with_dexa = scaler_data["scaler"]
+    bounds_with_dexa = scaler_data["bounds"]
+    
+    # Calculate training means and binary defaults for fallback
+    training_means_with_dexa = dict(zip(features_with_dexa, scaler_with_dexa.mean_))
+    binary_defaults_with_dexa = {
+        "calcitriol": round(training_means_with_dexa.get("calcitriol", 0)),
+        "calsium": round(training_means_with_dexa.get("calsium", 0)),
+        "calcitonin": round(training_means_with_dexa.get("calcitonin", 0)),
+        "as": round(training_means_with_dexa.get("as", 0)),
+    }
     
     without_dexa_scaler_path = os.path.join(MODELS_BASE_DIR, "ML_MODEL(WITHOUTDEXA)", "osteoporosis_scaler.pkl")
     model_without_dexa = joblib.load(without_dexa_path)
@@ -62,8 +78,8 @@ def register():
     password = data.get('password')
     role = data.get('role', 'Patient')
     
-    if User.query.filter_by(email=email, name=name).first():
-        return jsonify({"status": "error", "message": "An account with this exact username and email combination already exists."}), 400
+    if User.query.filter_by(email=email).first():
+        return jsonify({"status": "error", "message": "Email address already registered"}), 400
         
     new_user = User(name=name, email=email, role=role)
     new_user.set_password(password)
@@ -325,6 +341,7 @@ def get_doctor_patients():
                     "request": p.doctor_request,
                     "questionnaire_filled": p.questionnaire_filled,
                     "final_prediction": p.final_prediction,
+                    "pdf_url": p.pdf_report_url,
                     "prescribed_medication": p.prescribed_medication,
                     "appointment_requested": p.appointment_requested,
                     "appointment_time": p.appointment_time
@@ -489,7 +506,94 @@ def assign_appointment():
             
         patient.appointment_time = appointment_time
         db.session.commit()
-        return jsonify({"status": "success", "message": "Appointment time assigned successfully"})
+        return jsonify({"status": "success", "message": "Appointment assigned"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/v1/doctor/analyze-xray', methods=['POST'])
+@jwt_required()
+def analyze_xray():
+    try:
+        doctor_id = get_jwt_identity()
+        if 'image' not in request.files:
+            return jsonify({"status": "error", "message": "No image file provided"}), 400
+            
+        file = request.files['image']
+        patient_id = request.form.get('patient_id')
+        
+        if file.filename == '':
+            return jsonify({"status": "error", "message": "No selected file"}), 400
+            
+        patient = PatientProfile.query.filter_by(id=patient_id).first()
+        if not patient:
+            return jsonify({"status": "error", "message": "Patient not found"}), 404
+
+        # Save to temp file
+        temp_dir = tempfile.mkdtemp()
+        temp_path = os.path.join(temp_dir, file.filename)
+        file.save(temp_path)
+        
+        # --- 1. Get DL Model (X-Ray) Probability ---
+        dl_prediction_label, dl_probs = ai_system.predict_image(temp_path)
+        # Assuming classes are ['Normal', 'Osteopenia', 'Osteoporosis']
+        # Map to a risk score between 0 and 1
+        dl_risk_score = dl_probs[2] + (dl_probs[1] * 0.5) 
+        
+        # --- 2. Get ML Model (Without DEXA) Probability ---
+        def encode(val, pos_val):
+            if isinstance(val, str):
+                return 1 if val.lower() in [v.lower() for v in pos_val] else 0
+            return int(val) if val else 0
+            
+        patient_data = {
+            "Age": int(patient.age or 0),
+            "Gender": encode(patient.gender, ['Female']),
+            "Hormonal_Changes": encode(patient.hormonal_changes, ['Postmenopausal']),
+            "Body_Weight": encode(patient.body_weight, ['Underweight', 'Overweight']),
+            "Vitamin_D_Intake": encode(patient.vitamin_d_intake, ['Sufficient']),
+            "Physical_Activity": encode(patient.physical_activity, ['Active']),
+            "Smoking": encode(patient.smoking, ['Yes']),
+            "Alcohol_Consumption": 0 if str(patient.alcohol_consumption).lower() == 'none' else 1,
+            "Medications": 0 if str(patient.medications).lower() == 'none' else 1,
+            "Prior_Fractures": encode(patient.prior_fractures, ['Yes']),
+        }
+        df_nodexa = pd.DataFrame([patient_data])
+        expected_features = [
+            'Age', 'Smoking', 'Physical_Activity', 'Medications', 'Vitamin_D_Intake', 
+            'Hormonal_Changes', 'Gender', 'Body_Weight', 'Prior_Fractures', 'Alcohol_Consumption'
+        ]
+        df_nodexa = df_nodexa[expected_features]
+        df_nodexa_scaled = scaler_without_dexa.transform(df_nodexa)
+        
+        ml_probs = model_without_dexa.predict_proba(df_nodexa_scaled)[0]
+        ml_risk_score = ml_probs[1] # Probability of class 1 (High Risk)
+        
+        # --- 3. Average Predictions ---
+        final_prob = (dl_risk_score + ml_risk_score) / 2.0
+        final_prediction = "High Risk" if final_prob > 0.5 else "Low Risk"
+        percentage = round(final_prob * 100, 2)
+        
+        # Clean up
+        try:
+            os.remove(temp_path)
+            os.rmdir(temp_dir)
+        except Exception:
+            pass
+            
+        # Update Patient Profile
+        patient.xray_risk_score = dl_risk_score
+        patient.clinical_risk_score = ml_risk_score
+        patient.final_prediction = final_prediction
+        patient.doctor_request = None
+        db.session.commit()
+        
+        return jsonify({
+            "status": "success", 
+            "prediction": final_prediction,
+            "confidence": percentage,
+            "dl_prediction": dl_prediction_label,
+            "message": "X-Ray analyzed successfully"
+        })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -527,39 +631,139 @@ def predict_ml_dexa():
         }
         
         # Auto-calculate BMI from height and weight
-        height_cm = patient_data.get('height', 0)
-        weight_kg = patient_data.get('weight', 0)
+        height_cm = float(data.get('height', 0))
+        weight_kg = float(data.get('weight', 0))
         if height_cm > 0 and weight_kg > 0:
             height_m = height_cm / 100.0
             patient_data['bmi'] = round(weight_kg / (height_m * height_m), 2)
+            
+        fnt_val = patient_data["fnt"]
+        l1_4t_val = patient_data["l1_4t"]
+        
+        # 1. T-score validation & auto-conversion
+        for label, raw, setter in [("fnt", patient_data["fnt"], "fnt"), ("l1_4t", patient_data["l1_4t"], "l1_4t")]:
+            if raw > 3.0:
+                if raw <= 6.0:
+                    corrected = -raw
+                elif raw <= 20.0:
+                    corrected = -raw
+                else:
+                    corrected = training_means_with_dexa.get(label, 0)
+                if setter == "fnt":
+                    fnt_val = corrected
+                else:
+                    l1_4t_val = corrected
+                    
+        # 2. Binary validation & auto-conversion
+        binary_fields = {
+            "calcitriol": patient_data["calcitriol"],
+            "calsium": patient_data["calsium"],
+            "calcitonin": patient_data["calcitonin"],
+            "as": patient_data["as"]
+        }
+        
+        sanitized_binary = {}
+        for field, val in binary_fields.items():
+            if val not in [0.0, 1.0]:
+                if val > 1.0:
+                    sanitized_val = float(binary_defaults_with_dexa.get(field, 0))
+                else:
+                    sanitized_val = 1.0 if val >= 0.5 else 0.0
+                sanitized_binary[field] = sanitized_val
+            else:
+                sanitized_binary[field] = val
+                
+        # 3. Unit Conversions (US -> SI)
+        patient_data["fnt"] = fnt_val
+        patient_data["l1_4t"] = l1_4t_val
+        patient_data["calcitriol"] = sanitized_binary["calcitriol"]
+        patient_data["calsium"] = sanitized_binary["calsium"]
+        patient_data["calcitonin"] = sanitized_binary["calcitonin"]
+        patient_data["as"] = sanitized_binary["as"]
+        
+        patient_data["uric"] = patient_data["uric"] * 59.48
+        patient_data["crea"] = patient_data["crea"] * 88.42
+        patient_data["fbg"] = patient_data["fbg"] / 18.016
+        patient_data["ldl_c"] = patient_data["ldl_c"] / 38.67
+        patient_data["hdl_c"] = patient_data["hdl_c"] / 38.67
+        patient_data["ca"] = patient_data["ca"] * 0.2495
+        patient_data["p"] = patient_data["p"] * 0.3229
+        patient_data["bun"] = patient_data["bun"] / 2.80
         
         df = pd.DataFrame([patient_data])
+        
+        # 4. Outlier Clipping
+        for col, (lower, upper) in bounds_with_dexa.items():
+            if col in df.columns:
+                val = float(df.loc[0, col])
+                if val < lower or val > upper:
+                    df.loc[0, col] = min(max(val, lower), upper)
+
         df = df[features_with_dexa]
         df_scaled = scaler_with_dexa.transform(df)
         
-        prediction = int(model_with_dexa.predict(df_scaled)[0])
-        probability = model_with_dexa.predict_proba(df_scaled)[0]
+        dexa_probs = model_with_dexa.predict_proba(df_scaled)[0]
+        dexa_risk_score = float(dexa_probs[1])
         
-        result = "Osteoporosis" if prediction == 1 else "Healthy"
-        confidence = float(max(probability) * 100)
+        # Get ML Clinical Probability (Recalculate it)
+        patient = PatientProfile.query.filter_by(id=patient_id).first()
+        if not patient:
+            return jsonify({"status": "error", "message": "Patient not found"}), 404
+            
+        def encode(val, pos_val):
+            if isinstance(val, str):
+                return 1 if val.lower() in [v.lower() for v in pos_val] else 0
+            return int(val) if val else 0
+            
+        clinical_data = {
+            "Age": int(patient.age or 0),
+            "Gender": encode(patient.gender, ['Female']),
+            "Hormonal_Changes": encode(patient.hormonal_changes, ['Postmenopausal']),
+            "Body_Weight": encode(patient.body_weight, ['Underweight', 'Overweight']),
+            "Vitamin_D_Intake": encode(patient.vitamin_d_intake, ['Sufficient']),
+            "Physical_Activity": encode(patient.physical_activity, ['Active']),
+            "Smoking": encode(patient.smoking, ['Yes']),
+            "Alcohol_Consumption": 0 if str(patient.alcohol_consumption).lower() == 'none' else 1,
+            "Medications": 0 if str(patient.medications).lower() == 'none' else 1,
+            "Prior_Fractures": encode(patient.prior_fractures, ['Yes']),
+        }
+        df_clinical = pd.DataFrame([clinical_data])
+        expected_features = [
+            'Age', 'Smoking', 'Physical_Activity', 'Medications', 'Vitamin_D_Intake', 
+            'Hormonal_Changes', 'Gender', 'Body_Weight', 'Prior_Fractures', 'Alcohol_Consumption'
+        ]
+        df_clinical = df_clinical[expected_features]
+        df_clinical_scaled = scaler_without_dexa.transform(df_clinical)
+        
+        ml_probs = model_without_dexa.predict_proba(df_clinical_scaled)[0]
+        ml_risk_score = float(ml_probs[1])
+        
+        # Average with X-Ray DL probability if entered
+        scores_to_average = [dexa_risk_score, ml_risk_score]
+        if patient.xray_risk_score is not None:
+            scores_to_average.append(patient.xray_risk_score)
+            
+        final_prob = sum(scores_to_average) / len(scores_to_average)
+        
+        result = "Osteoporosis" if final_prob > 0.5 else "Healthy"
+        confidence = round(final_prob * 100, 2)
         
         # Update Database
-        patient = PatientProfile.query.filter_by(id=patient_id).first()
-        if patient:
-            patient.final_prediction = result
-            patient.pdf_report_url = f"/reports/report_{patient_id}.pdf" # Mock PDF url
-            patient.doctor_request = None
-            db.session.commit()
-            
+        patient.final_prediction = result
+        patient.pdf_report_url = f"/reports/report_{patient_id}.pdf" # Mock PDF url
+        patient.doctor_request = None
+        db.session.commit()
+        
         return jsonify({
-            "status": "success",
+            "status": "success", 
             "prediction": result,
-            "confidence": round(confidence, 2),
+            "confidence": confidence,
             "probabilities": {
-                "Healthy": round(float(probability[0]) * 100, 2),
-                "Osteoporosis": round(float(probability[1]) * 100, 2)
+                "Healthy": round((1 - final_prob) * 100, 2),
+                "Osteoporosis": confidence
             },
-            "pdf_url": f"/reports/report_{patient_id}.pdf"
+            "pdf_url": patient.pdf_report_url,
+            "message": "DEXA Prediction successful with model fusion"
         })
     except Exception as e:
         import traceback

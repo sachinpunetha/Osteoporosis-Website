@@ -18,6 +18,7 @@ const DoctorDashboard = () => {
   const [genderFilter, setGenderFilter] = useState('All');
   const [ageGroupFilter, setAgeGroupFilter] = useState('All');
   const [showDashboard, setShowDashboard] = useState(true);
+  const [xrayFile, setXrayFile] = useState(null);
   
   const DEXA_LABELS = {
     fnt: "Femoral Neck T-Score (DEXA Scan)",
@@ -181,6 +182,47 @@ const DoctorDashboard = () => {
     }
   };
 
+  const handlePredictXray = async () => {
+    if (!xrayFile) {
+      alert("Please select an X-Ray image first.");
+      return;
+    }
+    setIsProcessing(true);
+    setProcessingText('Analyzing X-Ray using DenseNet121 DL Model...');
+    setActionModal(null);
+    
+    try {
+      const formData = new FormData();
+      formData.append('image', xrayFile);
+      formData.append('patient_id', selectedPatient.id);
+      
+      const res = await fetch(`${BASE_URL}/api/v1/doctor/analyze-xray`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('osteocare_token')}` },
+        body: formData
+      });
+      const data = await res.json();
+      
+      if(res.ok) {
+        setPredictionResult({
+          prediction: data.prediction,
+          confidence: null,
+          pdf_url: null
+        });
+        fetchPatients();
+        setSelectedPatient(prev => ({ ...prev, request: null, final_prediction: data.prediction }));
+        setStats(null);
+        fetchStats();
+      } else {
+        alert(data.message || 'Error analyzing X-Ray');
+      }
+    } catch(err) {
+      console.error(err);
+      alert("Connection error");
+    }
+    setIsProcessing(false);
+    setXrayFile(null);
+  };
 
   const handleAssignAppointment = async () => {
     try {
@@ -249,9 +291,14 @@ const DoctorDashboard = () => {
                 </div>
                 {selectedPatient.final_prediction && (
                   <div className={`inline-block px-4 py-2 rounded-xl text-sm font-bold border ${selectedPatient.final_prediction === 'Osteoporosis' || selectedPatient.final_prediction === 'Osteopenia' ? 'border-amber-500/50 bg-amber-500/10 text-amber-600' : 'border-blue-500/50 bg-blue-500/10 text-blue-400'}`}>
-                    <div className="text-xs font-normal text-slate-600 mb-1">Updated AI Prediction (DEXA)</div>
+                    <div className="text-xs font-normal text-slate-600 mb-1">Updated AI Prediction</div>
                     {selectedPatient.final_prediction}
                   </div>
+                )}
+                {selectedPatient.pdf_url && (
+                  <a href={`${BASE_URL}${selectedPatient.pdf_url}`} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center px-4 py-2 rounded-xl text-sm font-bold border border-indigo-500/50 bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 transition-colors">
+                    <FileText size={16} className="mr-2" /> View Detailed Report
+                  </a>
                 )}
               </div>
 
@@ -275,18 +322,14 @@ const DoctorDashboard = () => {
                     />
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-4 mb-4">
-                    <button onClick={() => handleRequest('DEXA')} className="btn-primary flex-col py-4 gap-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                    <button onClick={() => handleRequest('DEXA')} className="btn-primary flex-col py-4 gap-2 flex-1 w-full">
                       <FileText /> Request DEXA Scan
                     </button>
-                    <button onClick={() => handleRequest('X-Ray')} className="btn-primary flex-col py-4 gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-indigo-900/20 border-indigo-500">
+                    <span className="text-xs font-bold text-slate-400 shrink-0">OR</span>
+                    <button onClick={() => handleRequest('X-Ray')} className="btn-primary flex-col py-4 gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-indigo-900/20 border-indigo-500 flex-1 w-full">
                       <Image /> Request X-Ray Scan
                     </button>
-                  </div>
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="h-px bg-slate-200 flex-1"></div>
-                    <span className="text-xs font-bold text-slate-400">OR</span>
-                    <div className="h-px bg-slate-200 flex-1"></div>
                   </div>
                   <button onClick={() => handleRequest('Reviewed')} className="w-full glass-card flex-col py-4 gap-2 text-slate-700 hover:text-slate-800 hover:border-white">
                     <CheckCircle2 /> Mark as Reviewed
@@ -564,14 +607,21 @@ const DoctorDashboard = () => {
               {/* Left Side: Upload */}
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-3">X-Ray Image</h3>
-                <div className="border-2 border-dashed border-slate-300 rounded-2xl p-10 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer h-64">
+                <label className="border-2 border-dashed border-slate-300 rounded-2xl p-10 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer h-64">
                   <div className="bg-slate-200 p-4 rounded-full mb-4 text-teal-600">
                     <UploadCloud size={32} />
                   </div>
-                  <p className="font-bold text-slate-700 mb-1">Click to upload or drag and drop</p>
-                  <p className="text-xs text-slate-500 mb-4">PNG, JPG or DICOM (max. 10MB)</p>
-                  <button className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 shadow-sm">Select File</button>
-                </div>
+                  {xrayFile ? (
+                    <p className="font-bold text-teal-700 mb-1">{xrayFile.name}</p>
+                  ) : (
+                    <>
+                      <p className="font-bold text-slate-700 mb-1">Click to upload or drag and drop</p>
+                      <p className="text-xs text-slate-500 mb-4">PNG, JPG or DICOM (max. 10MB)</p>
+                      <div className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 shadow-sm">Select File</div>
+                    </>
+                  )}
+                  <input type="file" accept="image/png, image/jpeg" className="hidden" onChange={(e) => setXrayFile(e.target.files[0])} />
+                </label>
               </div>
 
               {/* Right Side: Form */}
@@ -599,11 +649,8 @@ const DoctorDashboard = () => {
             </div>
 
             <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
-              <button onClick={() => setActionModal(null)} className="px-6 py-2 rounded-xl text-slate-600 font-bold hover:bg-slate-100 transition-colors border border-slate-200 bg-white">Cancel</button>
-              <button onClick={() => {
-                setActionModal(null);
-                alert("X-Ray Analysis endpoint not connected yet.");
-              }} className="px-6 py-2 rounded-xl bg-teal-600 text-white font-bold hover:bg-teal-700 shadow-lg shadow-teal-900/20">
+              <button onClick={() => { setActionModal(null); setXrayFile(null); }} className="px-6 py-2 rounded-xl text-slate-600 font-bold hover:bg-slate-100 transition-colors border border-slate-200 bg-white">Cancel</button>
+              <button onClick={handlePredictXray} className="px-6 py-2 rounded-xl bg-teal-600 text-white font-bold hover:bg-teal-700 shadow-lg shadow-teal-900/20">
                 Analyze Scan
               </button>
             </div>
@@ -616,7 +663,7 @@ const DoctorDashboard = () => {
       {predictionResult && (
         <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm animate-in fade-in duration-300">
           <div className={`relative max-w-lg w-full p-8 rounded-2xl border ${
-              predictionResult.prediction === 'Healthy' || predictionResult.prediction === 'Normal' 
+              predictionResult.prediction === 'Healthy' || predictionResult.prediction === 'Normal' || predictionResult.prediction === 'Low Risk'
                 ? 'border-emerald-500/50 bg-emerald-950/20' 
                 : predictionResult.prediction === 'Osteopenia' 
                   ? 'border-amber-500/50 bg-amber-950/20'
@@ -629,13 +676,13 @@ const DoctorDashboard = () => {
 
             <div className="text-center mb-8 mt-2">
               <div className={`mx-auto w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(0,0,0,0.5)] ${
-                  predictionResult.prediction === 'Healthy' || predictionResult.prediction === 'Normal' 
+                  predictionResult.prediction === 'Healthy' || predictionResult.prediction === 'Normal' || predictionResult.prediction === 'Low Risk'
                     ? 'bg-emerald-500/20 text-emerald-400 shadow-emerald-500/20' 
                     : predictionResult.prediction === 'Osteopenia' 
                       ? 'bg-amber-500/20 text-amber-600 shadow-amber-500/20'
                       : 'bg-rose-500/20 text-rose-400 shadow-rose-500/20'
                 }`}>
-                {predictionResult.prediction === 'Healthy' || predictionResult.prediction === 'Normal' ? <ShieldCheck size={48} /> : <AlertTriangle size={48} />}
+                {predictionResult.prediction === 'Healthy' || predictionResult.prediction === 'Normal' || predictionResult.prediction === 'Low Risk' ? <ShieldCheck size={48} /> : <AlertTriangle size={48} />}
               </div>
               <h2 className="text-3xl font-bold text-slate-800 mb-2 tracking-tight">Analysis Complete</h2>
               <p className="text-slate-600 font-mono text-sm flex items-center justify-center gap-2">
@@ -651,14 +698,31 @@ const DoctorDashboard = () => {
                   <BarChart3 size={18}/> Predicted Class
                 </span>
                 <span className={`text-2xl font-black tracking-wide ${
-                  predictionResult.prediction === 'Healthy' || predictionResult.prediction === 'Normal' ? 'text-emerald-400' : predictionResult.prediction === 'Osteopenia' ? 'text-amber-600' : 'text-rose-400'
+                  predictionResult.prediction === 'Healthy' || predictionResult.prediction === 'Normal' || predictionResult.prediction === 'Low Risk' ? 'text-emerald-400' : predictionResult.prediction === 'Osteopenia' ? 'text-amber-600' : 'text-rose-400'
                 }`}>{predictionResult.prediction.toUpperCase()}</span>
               </div>
               
               <div className="bg-white/80 rounded-xl p-5 border border-slate-200 shadow-inner">
                 <div className="mb-4">
-                  <span className="text-slate-600 font-medium text-sm flex items-center gap-2 mb-3"><Database size={14}/> Probability Distribution</span>
-                  {predictionResult.probabilities && Object.entries(predictionResult.probabilities).map(([key, val]) => (
+                {predictionResult.confidence && (
+                  <div className="mb-4">
+                    <span className="text-slate-600 font-medium text-sm flex items-center gap-2 mb-3"><Activity size={14}/> Risk Confidence Score</span>
+                    <div className="bg-white rounded-lg p-3 border border-slate-200 text-center text-lg font-bold text-slate-800">
+                      {predictionResult.confidence}%
+                    </div>
+                  </div>
+                )}
+                
+                {predictionResult.dl_prediction && (
+                  <div className="mb-4">
+                    <span className="text-slate-600 font-medium text-sm flex items-center gap-2 mb-3"><Image size={14}/> X-Ray DL Specific Prediction</span>
+                    <div className="bg-white rounded-lg p-3 border border-slate-200 text-center text-lg font-bold text-slate-800">
+                      {predictionResult.dl_prediction}
+                    </div>
+                  </div>
+                )}
+                
+                {predictionResult.probabilities && Object.entries(predictionResult.probabilities).map(([key, val]) => (
                     <div key={key} className="mb-3 last:mb-0">
                       <div className="flex justify-between text-xs mb-1 font-mono">
                         <span className={key === 'Normal' || key === 'Healthy' ? 'text-emerald-400' : key === 'Osteopenia' ? 'text-amber-600' : 'text-rose-400'}>{key}</span>

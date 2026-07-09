@@ -16,9 +16,20 @@ function getHeaders(includeAuth = true) {
 async function request(method, path, body = null, auth = true) {
   const options = { method, headers: getHeaders(auth) };
   if (body) options.body = JSON.stringify(body);
+  
   const res = await fetch(`${BASE_URL}${path}`, options);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || 'Request failed');
+  let data;
+  
+  const contentType = res.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    data = await res.json();
+  } else {
+    // If the server returns HTML (e.g. 500 Internal Server Error)
+    const text = await res.text();
+    throw new Error(`Server Error (${res.status}): Please check backend or credentials.`);
+  }
+
+  if (!res.ok) throw new Error(data?.message || 'Request failed');
   return data;
 }
 
