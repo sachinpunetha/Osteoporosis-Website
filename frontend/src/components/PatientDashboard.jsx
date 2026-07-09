@@ -110,107 +110,110 @@ const PatientDashboard = () => {
             <h2 className="text-2xl font-bold text-slate-800 mb-2">Health Assessment</h2>
             <p className="text-slate-600 mb-6">Please complete this questionnaire. Your assigned doctor will review your responses.</p>
             
-            <form onSubmit={handleSubmitQuestionnaire} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/40 p-6 rounded-2xl border border-teal-100">
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-teal-800">Age</label>
-                  <input required type="number" value={form.Age} onChange={e => setF('Age', e.target.value)} className="input-glass w-full bg-white border-teal-100 focus:border-teal-500 focus:ring-teal-500/20 shadow-sm" placeholder="e.g. 65" />
+            <form onSubmit={handleSubmitQuestionnaire} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8 rounded-[2rem] bg-gradient-to-br from-white/90 via-teal-50/50 to-white/90 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-teal-100/60 backdrop-blur-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-teal-200/20 rounded-full blur-3xl -z-10"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-200/20 rounded-full blur-3xl -z-10"></div>
+                
+                <div className="group space-y-2 relative z-10">
+                  <label className="text-sm font-bold text-slate-700 ml-1 transition-colors group-hover:text-teal-700">Age</label>
+                  <input required type="number" value={form.Age} onChange={e => setF('Age', e.target.value)} className="w-full bg-white/70 border-2 border-slate-100 text-slate-800 rounded-xl px-4 py-3 outline-none transition-all duration-300 hover:border-teal-200 hover:shadow-md hover:bg-white focus:border-teal-500 focus:bg-white focus:shadow-[0_0_20px_rgba(20,184,166,0.15)] placeholder:text-slate-400" placeholder="e.g. 65" />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-teal-800">Gender</label>
-                  <select required value={form.Gender} onChange={e => setF('Gender', e.target.value)} className="input-glass w-full bg-white border-teal-100 focus:border-teal-500 focus:ring-teal-500/20 shadow-sm">
+                <div className="group space-y-2 relative z-10">
+                  <label className="text-sm font-bold text-slate-700 ml-1 transition-colors group-hover:text-teal-700">Gender</label>
+                  <select required value={form.Gender} onChange={e => setF('Gender', e.target.value)} className="w-full bg-white/70 border-2 border-slate-100 text-slate-800 rounded-xl px-4 py-3 outline-none transition-all duration-300 hover:border-teal-200 hover:shadow-md hover:bg-white focus:border-teal-500 focus:bg-white focus:shadow-[0_0_20px_rgba(20,184,166,0.15)] appearance-none cursor-pointer">
                     <option value="" disabled>Select Gender</option>
                     <option>Male</option>
                     <option>Female</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-teal-800">Race/Ethnicity</label>
-                  <select required value={form.Race_Ethnicity} onChange={e => setF('Race_Ethnicity', e.target.value)} className="input-glass w-full bg-white border-teal-100 focus:border-teal-500 focus:ring-teal-500/20 shadow-sm">
+                <div className="group space-y-2 relative z-10">
+                  <label className="text-sm font-bold text-slate-700 ml-1 transition-colors group-hover:text-teal-700">Race/Ethnicity</label>
+                  <select required value={form.Race_Ethnicity} onChange={e => setF('Race_Ethnicity', e.target.value)} className="w-full bg-white/70 border-2 border-slate-100 text-slate-800 rounded-xl px-4 py-3 outline-none transition-all duration-300 hover:border-teal-200 hover:shadow-md hover:bg-white focus:border-teal-500 focus:bg-white focus:shadow-[0_0_20px_rgba(20,184,166,0.15)] appearance-none cursor-pointer">
                     <option value="" disabled>Select Ethnicity</option>
                     <option value="African American">African American</option>
                     <option value="Asian">Asian</option>
                     <option value="Caucasian">Caucasian</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-teal-800">Body Weight</label>
-                  <select value={form.Body_Weight} onChange={e => setF('Body_Weight', e.target.value)} className="input-glass w-full bg-white border-teal-100 focus:border-teal-500 focus:ring-teal-500/20 shadow-sm">
+                <div className="group space-y-2 relative z-10">
+                  <label className="text-sm font-bold text-slate-700 ml-1 transition-colors group-hover:text-teal-700">Body Weight</label>
+                  <select value={form.Body_Weight} onChange={e => setF('Body_Weight', e.target.value)} className="w-full bg-white/70 border-2 border-slate-100 text-slate-800 rounded-xl px-4 py-3 outline-none transition-all duration-300 hover:border-teal-200 hover:shadow-md hover:bg-white focus:border-teal-500 focus:bg-white focus:shadow-[0_0_20px_rgba(20,184,166,0.15)] appearance-none cursor-pointer">
                     <option>Underweight</option>
                     <option>Normal</option>
                     <option>Overweight</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-teal-800">Calcium Intake</label>
-                  <select value={form.Calcium_Intake} onChange={e => setF('Calcium_Intake', e.target.value)} className="input-glass w-full bg-white border-teal-100 focus:border-teal-500 focus:ring-teal-500/20 shadow-sm">
+                <div className="group space-y-2 relative z-10">
+                  <label className="text-sm font-bold text-slate-700 ml-1 transition-colors group-hover:text-teal-700">Calcium Intake</label>
+                  <select value={form.Calcium_Intake} onChange={e => setF('Calcium_Intake', e.target.value)} className="w-full bg-white/70 border-2 border-slate-100 text-slate-800 rounded-xl px-4 py-3 outline-none transition-all duration-300 hover:border-teal-200 hover:shadow-md hover:bg-white focus:border-teal-500 focus:bg-white focus:shadow-[0_0_20px_rgba(20,184,166,0.15)] appearance-none cursor-pointer">
                     <option>Low</option>
                     <option>Adequate</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-teal-800">Vitamin D Intake</label>
-                  <select value={form.Vitamin_D_Intake} onChange={e => setF('Vitamin_D_Intake', e.target.value)} className="input-glass w-full bg-white border-teal-100 focus:border-teal-500 focus:ring-teal-500/20 shadow-sm">
+                <div className="group space-y-2 relative z-10">
+                  <label className="text-sm font-bold text-slate-700 ml-1 transition-colors group-hover:text-teal-700">Vitamin D Intake</label>
+                  <select value={form.Vitamin_D_Intake} onChange={e => setF('Vitamin_D_Intake', e.target.value)} className="w-full bg-white/70 border-2 border-slate-100 text-slate-800 rounded-xl px-4 py-3 outline-none transition-all duration-300 hover:border-teal-200 hover:shadow-md hover:bg-white focus:border-teal-500 focus:bg-white focus:shadow-[0_0_20px_rgba(20,184,166,0.15)] appearance-none cursor-pointer">
                     <option>Insufficient</option>
                     <option>Sufficient</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-teal-800">Physical Activity</label>
-                  <select value={form.Physical_Activity} onChange={e => setF('Physical_Activity', e.target.value)} className="input-glass w-full bg-white border-teal-100 focus:border-teal-500 focus:ring-teal-500/20 shadow-sm">
+                <div className="group space-y-2 relative z-10">
+                  <label className="text-sm font-bold text-slate-700 ml-1 transition-colors group-hover:text-teal-700">Physical Activity</label>
+                  <select value={form.Physical_Activity} onChange={e => setF('Physical_Activity', e.target.value)} className="w-full bg-white/70 border-2 border-slate-100 text-slate-800 rounded-xl px-4 py-3 outline-none transition-all duration-300 hover:border-teal-200 hover:shadow-md hover:bg-white focus:border-teal-500 focus:bg-white focus:shadow-[0_0_20px_rgba(20,184,166,0.15)] appearance-none cursor-pointer">
                     <option>Sedentary</option>
                     <option>Active</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-teal-800">Smoking</label>
-                  <select value={form.Smoking} onChange={e => setF('Smoking', e.target.value)} className="input-glass w-full bg-white border-teal-100 focus:border-teal-500 focus:ring-teal-500/20 shadow-sm">
+                <div className="group space-y-2 relative z-10">
+                  <label className="text-sm font-bold text-slate-700 ml-1 transition-colors group-hover:text-teal-700">Smoking</label>
+                  <select value={form.Smoking} onChange={e => setF('Smoking', e.target.value)} className="w-full bg-white/70 border-2 border-slate-100 text-slate-800 rounded-xl px-4 py-3 outline-none transition-all duration-300 hover:border-teal-200 hover:shadow-md hover:bg-white focus:border-teal-500 focus:bg-white focus:shadow-[0_0_20px_rgba(20,184,166,0.15)] appearance-none cursor-pointer">
                     <option>No</option>
                     <option>Yes</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-teal-800">Alcohol Consumption</label>
-                  <select value={form.Alcohol_Consumption} onChange={e => setF('Alcohol_Consumption', e.target.value)} className="input-glass w-full bg-white border-teal-100 focus:border-teal-500 focus:ring-teal-500/20 shadow-sm">
+                <div className="group space-y-2 relative z-10">
+                  <label className="text-sm font-bold text-slate-700 ml-1 transition-colors group-hover:text-teal-700">Alcohol Consumption</label>
+                  <select value={form.Alcohol_Consumption} onChange={e => setF('Alcohol_Consumption', e.target.value)} className="w-full bg-white/70 border-2 border-slate-100 text-slate-800 rounded-xl px-4 py-3 outline-none transition-all duration-300 hover:border-teal-200 hover:shadow-md hover:bg-white focus:border-teal-500 focus:bg-white focus:shadow-[0_0_20px_rgba(20,184,166,0.15)] appearance-none cursor-pointer">
                     <option>None</option>
                     <option>Moderate</option>
                     <option>High</option>
                   </select>
                 </div>
                 {form.Gender !== 'Male' && (
-                  <div className="space-y-1">
-                    <label className="text-sm font-semibold text-teal-800">Hormonal Changes</label>
-                    <select value={form.Hormonal_Changes} onChange={e => setF('Hormonal_Changes', e.target.value)} className="input-glass w-full bg-white border-teal-100 focus:border-teal-500 focus:ring-teal-500/20 shadow-sm">
+                  <div className="group space-y-2 relative z-10">
+                    <label className="text-sm font-bold text-slate-700 ml-1 transition-colors group-hover:text-teal-700">Hormonal Changes</label>
+                    <select value={form.Hormonal_Changes} onChange={e => setF('Hormonal_Changes', e.target.value)} className="w-full bg-white/70 border-2 border-slate-100 text-slate-800 rounded-xl px-4 py-3 outline-none transition-all duration-300 hover:border-teal-200 hover:shadow-md hover:bg-white focus:border-teal-500 focus:bg-white focus:shadow-[0_0_20px_rgba(20,184,166,0.15)] appearance-none cursor-pointer">
                       <option>Normal</option>
                       <option>Postmenopausal</option>
                     </select>
                   </div>
                 )}
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-teal-800">Family History</label>
-                  <select value={form.Family_History} onChange={e => setF('Family_History', e.target.value)} className="input-glass w-full bg-white border-teal-100 focus:border-teal-500 focus:ring-teal-500/20 shadow-sm">
+                <div className="group space-y-2 relative z-10">
+                  <label className="text-sm font-bold text-slate-700 ml-1 transition-colors group-hover:text-teal-700">Family History</label>
+                  <select value={form.Family_History} onChange={e => setF('Family_History', e.target.value)} className="w-full bg-white/70 border-2 border-slate-100 text-slate-800 rounded-xl px-4 py-3 outline-none transition-all duration-300 hover:border-teal-200 hover:shadow-md hover:bg-white focus:border-teal-500 focus:bg-white focus:shadow-[0_0_20px_rgba(20,184,166,0.15)] appearance-none cursor-pointer">
                     <option>No</option>
                     <option>Yes</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-teal-800">Medical Conditions</label>
-                  <select value={form.Medical_Conditions} onChange={e => setF('Medical_Conditions', e.target.value)} className="input-glass w-full bg-white border-teal-100 focus:border-teal-500 focus:ring-teal-500/20 shadow-sm">
+                <div className="group space-y-2 relative z-10">
+                  <label className="text-sm font-bold text-slate-700 ml-1 transition-colors group-hover:text-teal-700">Medical Conditions</label>
+                  <select value={form.Medical_Conditions} onChange={e => setF('Medical_Conditions', e.target.value)} className="w-full bg-white/70 border-2 border-slate-100 text-slate-800 rounded-xl px-4 py-3 outline-none transition-all duration-300 hover:border-teal-200 hover:shadow-md hover:bg-white focus:border-teal-500 focus:bg-white focus:shadow-[0_0_20px_rgba(20,184,166,0.15)] appearance-none cursor-pointer">
                     <option>None</option>
                     <option>Hyperthyroidism</option>
                     <option>Rheumatoid Arthritis</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-teal-800">Medications</label>
-                  <select value={form.Medications} onChange={e => setF('Medications', e.target.value)} className="input-glass w-full bg-white border-teal-100 focus:border-teal-500 focus:ring-teal-500/20 shadow-sm">
+                <div className="group space-y-2 relative z-10">
+                  <label className="text-sm font-bold text-slate-700 ml-1 transition-colors group-hover:text-teal-700">Medications</label>
+                  <select value={form.Medications} onChange={e => setF('Medications', e.target.value)} className="w-full bg-white/70 border-2 border-slate-100 text-slate-800 rounded-xl px-4 py-3 outline-none transition-all duration-300 hover:border-teal-200 hover:shadow-md hover:bg-white focus:border-teal-500 focus:bg-white focus:shadow-[0_0_20px_rgba(20,184,166,0.15)] appearance-none cursor-pointer">
                     <option>None</option>
                     <option>Corticosteroids</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-semibold text-teal-800">Prior Fractures</label>
-                  <select value={form.Prior_Fractures} onChange={e => setF('Prior_Fractures', e.target.value)} className="input-glass w-full bg-white border-teal-100 focus:border-teal-500 focus:ring-teal-500/20 shadow-sm">
+                <div className="group space-y-2 relative z-10">
+                  <label className="text-sm font-bold text-slate-700 ml-1 transition-colors group-hover:text-teal-700">Prior Fractures</label>
+                  <select value={form.Prior_Fractures} onChange={e => setF('Prior_Fractures', e.target.value)} className="w-full bg-white/70 border-2 border-slate-100 text-slate-800 rounded-xl px-4 py-3 outline-none transition-all duration-300 hover:border-teal-200 hover:shadow-md hover:bg-white focus:border-teal-500 focus:bg-white focus:shadow-[0_0_20px_rgba(20,184,166,0.15)] appearance-none cursor-pointer">
                     <option>No</option>
                     <option>Yes</option>
                   </select>
@@ -218,8 +221,10 @@ const PatientDashboard = () => {
               </div>
               
               <div className="pt-2">
-                <button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white text-lg font-bold py-4 rounded-xl shadow-lg shadow-teal-900/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-                  <Activity size={24} /> Submit Health Assessment
+                <button type="submit" className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white text-lg font-bold py-4 rounded-xl shadow-lg shadow-teal-900/20 hover:shadow-teal-900/40 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98] active:translate-y-0 flex items-center justify-center gap-2 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-white/20 w-full h-full -translate-x-full group-hover:translate-x-full transition-transform duration-700 skew-x-12"></div>
+                  <Activity size={24} className="relative z-10" /> 
+                  <span className="relative z-10">Submit Health Assessment</span>
                 </button>
               </div>
             </form>
