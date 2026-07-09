@@ -540,32 +540,25 @@ def analyze_xray():
         dl_risk_score = dl_probs[2] + (dl_probs[1] * 0.5) 
         
         # --- 2. Get ML Model (Without DEXA) Probability ---
-        def encode(val, pos_val):
-            if isinstance(val, str):
-                return 1 if val.lower() in [v.lower() for v in pos_val] else 0
-            return int(val) if val else 0
-            
         patient_data = {
             "Age": int(patient.age or 0),
-            "Gender": encode(patient.gender, ['Female']),
-            "Hormonal_Changes": encode(patient.hormonal_changes, ['Postmenopausal']),
-            "Body_Weight": encode(patient.body_weight, ['Underweight', 'Overweight']),
-            "Vitamin_D_Intake": encode(patient.vitamin_d_intake, ['Sufficient']),
-            "Physical_Activity": encode(patient.physical_activity, ['Active']),
-            "Smoking": encode(patient.smoking, ['Yes']),
-            "Alcohol_Consumption": 0 if str(patient.alcohol_consumption).lower() == 'none' else 1,
-            "Medications": 0 if str(patient.medications).lower() == 'none' else 1,
-            "Prior_Fractures": encode(patient.prior_fractures, ['Yes']),
+            "Gender": patient.gender or 'Unknown',
+            "Hormonal_Changes": patient.hormonal_changes or 'Normal',
+            "Family_History": patient.family_history or 'No',
+            "Race/Ethnicity": patient.race_ethnicity or 'Caucasian',
+            "Body_Weight": patient.body_weight or 'Normal',
+            "Calcium_Intake": patient.calcium_intake or 'Adequate',
+            "Vitamin_D_Intake": patient.vitamin_d_intake or 'Sufficient',
+            "Physical_Activity": patient.physical_activity or 'Active',
+            "Smoking": patient.smoking or 'No',
+            "Alcohol_Consumption": patient.alcohol_consumption or 'None',
+            "Medical_Conditions": patient.medical_conditions or 'None',
+            "Medications": patient.medications or 'None',
+            "Prior_Fractures": patient.prior_fractures or 'No',
         }
         df_nodexa = pd.DataFrame([patient_data])
-        expected_features = [
-            'Age', 'Smoking', 'Physical_Activity', 'Medications', 'Vitamin_D_Intake', 
-            'Hormonal_Changes', 'Gender', 'Body_Weight', 'Prior_Fractures', 'Alcohol_Consumption'
-        ]
-        df_nodexa = df_nodexa[expected_features]
-        df_nodexa_scaled = scaler_without_dexa.transform(df_nodexa)
         
-        ml_probs = model_without_dexa.predict_proba(df_nodexa_scaled)[0]
+        ml_probs = model_without_dexa.predict_proba(df_nodexa)[0]
         ml_risk_score = ml_probs[1] # Probability of class 1 (High Risk)
         
         # --- 3. Average Predictions ---
