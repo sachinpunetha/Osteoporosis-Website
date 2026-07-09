@@ -581,8 +581,8 @@ def analyze_xray():
             pass
             
         # Update Patient Profile
-        patient.xray_risk_score = dl_risk_score
-        patient.clinical_risk_score = ml_risk_score
+        patient.xray_risk_score = float(dl_risk_score)
+        patient.clinical_risk_score = float(ml_risk_score)
         patient.final_prediction = final_prediction
         patient.doctor_request = None
         db.session.commit()

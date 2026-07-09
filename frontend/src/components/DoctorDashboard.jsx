@@ -204,11 +204,6 @@ const DoctorDashboard = () => {
       const data = await res.json();
       
       if(res.ok) {
-        setPredictionResult({
-          prediction: data.prediction,
-          confidence: null,
-          pdf_url: null
-        });
         fetchPatients();
         setSelectedPatient(prev => ({ ...prev, request: null, final_prediction: data.prediction }));
         setStats(null);
